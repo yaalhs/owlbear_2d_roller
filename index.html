@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#181a20" />
+    <title>Shared Dice Roller</title>
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <div>
+          <p class="eyebrow">OWLBEAR RODEO</p>
+          <h1>Dice roller</h1>
+        </div>
+        <span id="connection-status" class="status" role="status">Connecting…</span>
+      </header>
+
+      <section class="roller" aria-labelledby="roll-heading">
+        <h2 id="roll-heading">Build your roll</h2>
+        <div id="dice-list" class="dice-list"></div>
+        <button id="roll-button" class="roll-button" type="button" disabled>
+          Roll selected dice
+        </button>
+        <p id="error-message" class="error" role="alert" hidden></p>
+      </section>
+
+      <section class="results" aria-labelledby="results-heading">
+        <div class="results-heading">
+          <h2 id="results-heading">Shared rolls</h2>
+          <span id="results-count" class="results-count"></span>
+        </div>
+        <ol id="roll-history" class="roll-history" aria-live="polite"></ol>
+      </section>
+
+      <footer>Rolls are shared with everyone in this room.</footer>
+    </main>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

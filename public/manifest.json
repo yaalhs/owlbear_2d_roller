@@ -1,0 +1,14 @@
+{
+  "name": "Shared Dice Roller",
+  "version": "1.0.0",
+  "manifest_version": 1,
+  "description": "A simple dice tray with shared room results.",
+  "icon": "./icon.svg",
+  "action": {
+    "title": "Dice Roller",
+    "icon": "./icon.svg",
+    "popover": "./index.html",
+    "width": 360,
+    "height": 560
+  }
+}
