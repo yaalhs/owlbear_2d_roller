@@ -30,6 +30,10 @@ jobs:
         run: npm test
       - name: Build extension
         run: npm run build
+      - name: Set absolute GitHub Pages URLs in manifest
+        run: node scripts/set-pages-manifest-urls.mjs
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact

@@ -34,28 +34,13 @@ npm run preview
 
 Owlbear does not run the source code directly from your computer or a GitHub repository page. It loads the extension from public HTTPS-hosted files. GitHub Pages can host those files, so your computer does not need to stay on after the Pages deployment is complete.
 
-1. Install [Git for Windows](https://git-scm.com/download/win) if the `git` command is not available.
-2. Sign in to GitHub and create a **public** repository. Choose a repository name, such as `owlbear-dice-roller`. Leave **Add a README**, `.gitignore`, and license unchecked so the new repository is empty.
-3. Open PowerShell and run these commands. Replace `YOUR-USERNAME` and `YOUR-REPOSITORY` with your GitHub username and the repository name you chose:
+1. Place the project in a **public GitHub repository**, including the `.github/workflows/deploy.yml` workflow.
+2. In the repository, open **Settings → Pages** and set the build and deployment source to **GitHub Actions**.
+3. Once the workflow has been triggered, open the **Actions** tab and wait for **Deploy extension to GitHub Pages** to finish successfully. It installs dependencies, runs tests, builds the extension, writes absolute Pages URLs for the manifest icon and popover, and publishes the contents of `dist/`.
+4. The extension manifest URL is `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/manifest.json`, with your GitHub username and repository name in place of the placeholders.
+5. In Owlbear Rodeo, use the extension menu's option to add/load an extension by URL and paste that manifest URL. Open the extension in a room; each player who wants to use it should load the same extension URL.
 
-   ```powershell
-   cd "C:\Users\domin\.vscode\dieroller"
-   git init -b main
-   git add .
-   git commit -m "Add Owlbear shared dice roller"
-   git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
-   git push -u origin main
-   ```
-
-   If Git asks you to identify yourself on the first commit, set your name and email with `git config --global user.name "Your Name"` and `git config --global user.email "you@example.com"`, then repeat the commit. GitHub may open a browser window to authenticate during the push.
-
-   `git add .` includes the hidden `.github/workflows/deploy.yml` workflow. The `.gitignore` excludes generated `node_modules/` and `dist/` folders.
-4. In the GitHub repository, open **Settings → Pages** and set the build and deployment source to **GitHub Actions**.
-5. Open the **Actions** tab and wait for **Deploy extension to GitHub Pages** to finish successfully. The workflow installs dependencies, runs tests, builds the extension, and publishes the contents of `dist/`.
-6. The extension manifest URL is `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/manifest.json`. Replace both placeholders with your account and repository names.
-7. In Owlbear Rodeo, use the extension menu's option to add/load an extension by URL and paste that manifest URL. Open the extension in a room; each player who wants to use it should load the same extension URL.
-
-On later pushes to `main`, GitHub Actions automatically tests, rebuilds, and republishes the extension. The source repository and published Pages files are public. You can also test locally with `npm run build` and `npm run preview`, but Owlbear will still need the published HTTPS URL rather than your local preview URL.
+On later pushes to `main`, GitHub Actions automatically tests, rebuilds, and republishes the extension. The source repository and published Pages files are public. The manifest in `public/` uses relative paths for the source project; the deployment workflow replaces those with absolute URLs for the Pages site. You can also test locally with `npm run build` and `npm run preview`, but Owlbear will still need the published HTTPS URL rather than your local preview URL.
 
 Room history is kept to the newest 12 rolls in metadata under `com.dieroller.shared-dice-roller/rolls`. It is a small room-data feed, not an archive or a private roll channel. Each roll is limited to 20 dice to keep the shared data small.
 
