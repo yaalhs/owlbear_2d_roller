@@ -25,14 +25,6 @@ export function sumNumericResults(results: readonly RolledDie[]): number {
   }, 0);
 }
 
-export function formatRollNotification(roll: SharedRoll): string {
-  const faces = roll.results.map((result) => {
-    const die = DICE_CATALOG.find((candidate) => candidate.id === result.dieId);
-    return `${die?.name ?? result.dieId} ${result.value}`;
-  });
-  return `Dice rolled: ${faces.join(", ")}. Total: ${sumNumericResults(roll.results)}`;
-}
-
 export function rollDice(
   dice: readonly DieDefinition[],
   quantities: Readonly<Record<string, number>>,

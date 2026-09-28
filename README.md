@@ -1,6 +1,6 @@
 # Shared Dice Roller for Owlbear Rodeo
 
-A small Owlbear Rodeo extension for selecting quantities of common dice, rolling them, and sharing the latest room rolls. Rolls appear as Owlbear notifications for other players who have the extension installed, even while its dice popover is closed. The UI is plain TypeScript and CSS; roll history is stored in the room's namespaced metadata and live roll notifications are sent with Owlbear's broadcast API.
+A small Owlbear Rodeo extension for selecting quantities of common dice, rolling them, and sharing the latest room rolls. Rolls appear in a temporary bottom-right pop-up for other players who have the extension installed, even while its dice tray is closed. The custom pop-up is anchored at the lower-right of each player's scene viewport and stays visible for six seconds. The UI is plain TypeScript and CSS; roll history is stored in the room's namespaced metadata and live roll events are sent with Owlbear's broadcast API.
 
 > **Blatantly vibecoded.** Expect rough edges; review and test before relying on it.
 

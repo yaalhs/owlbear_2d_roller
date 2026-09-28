@@ -7,7 +7,6 @@ import {
 } from "./catalog";
 import type { DieDefinition, DieFace } from "./catalog";
 import {
-  formatRollNotification,
   parseSharedRolls,
   rollDice,
   ROLL_BROADCAST_CHANNEL,
@@ -202,20 +201,11 @@ async function rollSelectedDice(): Promise<void> {
       });
       try {
         await OBR.broadcast.sendMessage(ROLL_BROADCAST_CHANNEL, roll, {
-          destination: "REMOTE",
+          destination: "ALL",
         });
       } catch (error) {
         throw new Error(
           `Roll saved to shared history, but its pop-up could not be sent: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        );
-      }
-      try {
-        await OBR.notification.show(formatRollNotification(roll), "INFO");
-      } catch (error) {
-        throw new Error(
-          `Roll shared with the room, but your pop-up could not be shown: ${
             error instanceof Error ? error.message : String(error)
           }`,
         );
