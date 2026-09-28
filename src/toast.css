@@ -31,6 +31,18 @@ body {
   border-radius: 12px;
   background: #202128f5;
   box-shadow: 0 8px 28px #0008;
+  cursor: pointer;
+  text-align: left;
+}
+
+.toast:hover {
+  border-color: #a18aff;
+  background: #282633f7;
+}
+
+.toast:focus-visible {
+  outline: 2px solid #b5a4ff;
+  outline-offset: 2px;
 }
 
 .toast-heading {
@@ -75,6 +87,10 @@ body {
 .toast-face > span {
   position: relative;
   text-shadow: 0 1px 3px #fff;
+}
+
+.toast-face-plot {
+  font-size: 9px;
 }
 
 .toast-total {

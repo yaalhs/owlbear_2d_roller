@@ -15,6 +15,7 @@ export interface SharedRoll {
   readonly id: string;
   readonly timestamp: string;
   readonly results: readonly RolledDie[];
+  readonly modifier?: number;
 }
 
 export function sumNumericResults(results: readonly RolledDie[]): number {
@@ -22,6 +23,10 @@ export function sumNumericResults(results: readonly RolledDie[]): number {
     const value = Number(result.value);
     return sum + (Number.isFinite(value) ? value : 0);
   }, 0);
+}
+
+export function getRollTotal(roll: Pick<SharedRoll, "results" | "modifier">): number {
+  return sumNumericResults(roll.results) + (roll.modifier ?? 0);
 }
 
 export function rollDice(
@@ -75,7 +80,8 @@ export function parseSharedRolls(value: unknown): SharedRoll[] {
     if (
       typeof candidate.id !== "string" ||
       typeof candidate.timestamp !== "string" ||
-      !Array.isArray(candidate.results)
+      !Array.isArray(candidate.results) ||
+      (candidate.modifier !== undefined && !Number.isInteger(candidate.modifier))
     ) {
       return false;
     }

@@ -7,6 +7,7 @@ import {
 } from "./catalog";
 import type { DieDefinition, DieFace } from "./catalog";
 import {
+  getRollTotal,
   parseSharedRolls,
   rollDice,
   ROLL_BROADCAST_CHANNEL,
@@ -24,11 +25,18 @@ const historyList = requiredElement<HTMLOListElement>("roll-history");
 const statusLabel = requiredElement<HTMLSpanElement>("connection-status");
 const errorMessage = requiredElement<HTMLParagraphElement>("error-message");
 const resultsCount = requiredElement<HTMLSpanElement>("results-count");
-const quantityInputs = new Map<string, HTMLInputElement>();
+const modifierToggle = requiredElement<HTMLButtonElement>("modifier-toggle");
+const modifierControls = requiredElement<HTMLDivElement>("modifier-controls");
+const modifierValueOutput = requiredElement<HTMLOutputElement>("modifier-value");
+const modifierMinus = requiredElement<HTMLButtonElement>("modifier-minus");
+const modifierPlus = requiredElement<HTMLButtonElement>("modifier-plus");
+const quantitySelections = new Map<string, number>();
 
 let roomReady = false;
 let previewMode = new URLSearchParams(window.location.search).has("preview");
 let visibleRolls: SharedRoll[] = [];
+let modifier = 0;
+let modifierEnabled = false;
 
 function requiredElement<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);
@@ -40,9 +48,9 @@ function requiredElement<T extends HTMLElement>(id: string): T {
 
 function buildDiceControls(): void {
   for (const die of DICE_CATALOG) {
-    const row = document.createElement("label");
+    const row = document.createElement("div");
     row.className = "die-row";
-    row.htmlFor = `quantity-${die.id}`;
+    row.dataset.dieId = die.id;
 
     const title = document.createElement("span");
     title.className = "die-name";
@@ -52,53 +60,63 @@ function buildDiceControls(): void {
     description.className = "die-description";
     description.textContent = `${die.faces.length} faces`;
 
-    const input = document.createElement("input");
-    input.id = `quantity-${die.id}`;
-    input.type = "number";
-    input.min = "0";
-    input.max = String(MAX_DICE_PER_TYPE);
-    input.step = "1";
-    input.value = "0";
-    input.inputMode = "numeric";
-    input.setAttribute("aria-label", `${die.name} quantity`);
-    input.addEventListener("input", updateRollButton);
+    const quantityControls = document.createElement("div");
+    quantityControls.className = "quantity-controls";
 
-    row.append(title, description, input);
+    const minus = document.createElement("button");
+    minus.className = "quantity-button";
+    minus.type = "button";
+    minus.textContent = "−";
+    minus.setAttribute("aria-label", `Remove one ${die.name}`);
+
+    const count = document.createElement("output");
+    count.className = "quantity-value";
+    count.textContent = "0";
+    count.setAttribute("aria-label", `${die.name} selected`);
+
+    const plus = document.createElement("button");
+    plus.className = "quantity-button quantity-plus";
+    plus.type = "button";
+    plus.textContent = "+";
+    plus.setAttribute("aria-label", `Add one ${die.name}`);
+
+    const changeQuantity = (amount: number) => {
+      const current = quantitySelections.get(die.id) ?? 0;
+      const total = [...quantitySelections.values()].reduce((sum, quantity) => sum + quantity, 0);
+      if (amount > 0 && (current >= MAX_DICE_PER_TYPE || total >= MAX_DICE_PER_ROLL)) return;
+      quantitySelections.set(die.id, Math.max(0, current + amount));
+      count.textContent = String(quantitySelections.get(die.id));
+      updateRollButton();
+    };
+    minus.addEventListener("click", () => changeQuantity(-1));
+    plus.addEventListener("click", () => changeQuantity(1));
+
+    quantityControls.append(minus, count, plus);
+    row.append(title, description, quantityControls);
     diceList.append(row);
-    quantityInputs.set(die.id, input);
+    quantitySelections.set(die.id, 0);
   }
 }
 
 function selectedQuantities(): Record<string, number> {
   const quantities: Record<string, number> = {};
-  for (const [id, input] of quantityInputs) {
-    const quantity = Number(input.value);
-    if (
-      !Number.isInteger(quantity) ||
-      quantity < 0 ||
-      quantity > MAX_DICE_PER_TYPE
-    ) {
-      throw new RangeError(`Choose a whole number from 0 to ${MAX_DICE_PER_TYPE} for ${id}.`);
-    }
+  for (const [id, quantity] of quantitySelections) {
     quantities[id] = quantity;
-  }
-  const total = Object.values(quantities).reduce((sum, quantity) => sum + quantity, 0);
-  if (total > MAX_DICE_PER_ROLL) {
-    throw new RangeError(`Choose no more than ${MAX_DICE_PER_ROLL} dice per roll.`);
   }
   return quantities;
 }
 
 function updateRollButton(): void {
-  try {
-    const quantities = selectedQuantities();
-    const hasDice = Object.values(quantities).some((quantity) => quantity > 0);
-    rollButton.disabled = !roomReady || !hasDice;
-    showError("");
-  } catch (error) {
-    rollButton.disabled = true;
-    showError(error instanceof Error ? error.message : "Enter valid dice quantities.");
+  const hasDice = [...quantitySelections.values()].some((quantity) => quantity > 0);
+  const total = [...quantitySelections.values()].reduce((sum, quantity) => sum + quantity, 0);
+  rollButton.disabled = !roomReady || !hasDice;
+  for (const row of diceList.querySelectorAll<HTMLElement>("[data-die-id]")) {
+    const id = row.dataset.dieId;
+    const count = id ? quantitySelections.get(id) ?? 0 : 0;
+    const plus = row.querySelector<HTMLButtonElement>(".quantity-plus");
+    if (plus) plus.disabled = count >= MAX_DICE_PER_TYPE || total >= MAX_DICE_PER_ROLL;
   }
+  showError("");
 }
 
 function showError(message: string): void {
@@ -124,7 +142,7 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
 
     const header = document.createElement("div");
     header.className = "roll-entry-header";
-    const total = sumNumericResults(roll.results);
+    const total = getRollTotal(roll);
     const title = document.createElement("strong");
     title.textContent = `Roll · ${roll.results.length} ${roll.results.length === 1 ? "die" : "dice"}`;
     const time = document.createElement("time");
@@ -145,7 +163,9 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
 
     const footer = document.createElement("div");
     footer.className = "roll-total";
-    footer.textContent = `Total: ${total}`;
+    footer.textContent = roll.modifier
+      ? `Total: ${total} (${sumNumericResults(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
+      : `Total: ${total}`;
     item.append(header, resultGrid, footer);
     historyList.append(item);
   }
@@ -178,6 +198,22 @@ function setRolls(rolls: SharedRoll[]): void {
   renderHistory(visibleRolls);
 }
 
+function setModifier(value: number): void {
+  modifier = value;
+  modifierValueOutput.textContent = `${value > 0 ? "+" : ""}${value}`;
+  modifierMinus.disabled = value <= -99;
+  modifierPlus.disabled = value >= 99;
+}
+
+function clearSelectedDice(): void {
+  for (const [id] of quantitySelections) {
+    quantitySelections.set(id, 0);
+    const row = diceList.querySelector<HTMLElement>(`[data-die-id="${id}"]`);
+    const count = row?.querySelector<HTMLOutputElement>(".quantity-value");
+    if (count) count.textContent = "0";
+  }
+}
+
 async function rollSelectedDice(): Promise<void> {
   showError("");
   rollButton.disabled = true;
@@ -189,6 +225,7 @@ async function rollSelectedDice(): Promise<void> {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       results,
+      ...(modifierEnabled && modifier !== 0 ? { modifier } : {}),
     };
 
     if (previewMode) {
@@ -211,6 +248,7 @@ async function rollSelectedDice(): Promise<void> {
         );
       }
     }
+    clearSelectedDice();
   } catch (error) {
     showError(error instanceof Error ? error.message : "The roll could not be shared.");
   } finally {
@@ -221,6 +259,14 @@ async function rollSelectedDice(): Promise<void> {
 buildDiceControls();
 renderHistory([]);
 rollButton.addEventListener("click", () => void rollSelectedDice());
+modifierToggle.addEventListener("click", () => {
+  modifierEnabled = !modifierEnabled;
+  modifierControls.hidden = !modifierEnabled;
+  modifierToggle.setAttribute("aria-expanded", String(modifierEnabled));
+  modifierToggle.textContent = modifierEnabled ? "Modifier" : "Add modifier";
+});
+modifierMinus.addEventListener("click", () => setModifier(modifier - 1));
+modifierPlus.addEventListener("click", () => setModifier(modifier + 1));
 
 if (previewMode) {
   statusLabel.textContent = "Local preview";
@@ -234,6 +280,9 @@ if (previewMode) {
 
     const syncRolls = (metadata: Record<string, unknown>) => {
       setRolls(parseSharedRolls(metadata[METADATA_KEY]));
+      if (new URLSearchParams(window.location.search).has("history")) {
+        historyList.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     };
     void OBR.room.getMetadata().then(syncRolls).catch((error: unknown) => {
       showError(error instanceof Error ? error.message : "Could not load shared rolls.");

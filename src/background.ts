@@ -26,6 +26,7 @@ async function showRollToast(roll: SharedRoll): Promise<void> {
   const id = `${TOAST_ID_PREFIX}/${roll.id}`;
   const toastUrl = new URL("./roll-toast.html", window.location.href);
   toastUrl.searchParams.set("roll", JSON.stringify(roll));
+  toastUrl.searchParams.set("toastId", id);
 
   while (activeToasts.length >= MAX_VISIBLE_TOASTS) {
     const oldest = activeToasts.shift();

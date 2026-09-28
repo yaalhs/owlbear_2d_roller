@@ -33,6 +33,18 @@ export const DICE_CATALOG: readonly DieDefinition[] = [
   numberedDie("d10", 10),
   numberedDie("d12", 12),
   numberedDie("d20", 20),
+  {
+    id: "plot",
+    name: "Plot die",
+    faces: [
+      { value: "Opportunity" },
+      { value: "Opportunity" },
+      { value: "Blank" },
+      { value: "Blank" },
+      { value: "Complication +2" },
+      { value: "Complication +4" },
+    ],
+  },
 ];
 
 export const MAX_DICE_PER_TYPE = 20;

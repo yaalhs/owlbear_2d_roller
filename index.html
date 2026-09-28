@@ -19,6 +19,16 @@
       <section class="roller" aria-labelledby="roll-heading">
         <h2 id="roll-heading">Build your roll</h2>
         <div id="dice-list" class="dice-list"></div>
+        <div class="modifier">
+          <button id="modifier-toggle" class="modifier-toggle" type="button" aria-expanded="false">
+            Add modifier
+          </button>
+          <div id="modifier-controls" class="modifier-controls" hidden>
+            <button id="modifier-minus" class="quantity-button" type="button" aria-label="Decrease modifier">−</button>
+            <output id="modifier-value" class="quantity-value" aria-live="polite">0</output>
+            <button id="modifier-plus" class="quantity-button" type="button" aria-label="Increase modifier">+</button>
+          </div>
+        </div>
         <button id="roll-button" class="roll-button" type="button" disabled>
           Roll selected dice
         </button>

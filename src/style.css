@@ -93,16 +93,17 @@ h2 {
 
 .die-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 64px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   min-height: 39px;
-  padding: 0 8px 0 10px;
+  gap: 8px;
+  padding: 4px 8px 4px 10px;
   border-radius: 8px;
   background: #292a33;
-  cursor: text;
 }
 
 .die-name {
+  min-width: 0;
   font-weight: 700;
 }
 
@@ -111,20 +112,75 @@ h2 {
   font-size: 11px;
 }
 
-.die-row input {
-  width: 64px;
-  padding: 6px 7px;
+.quantity-controls,
+.modifier-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.quantity-button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  padding: 0;
   border: 1px solid #464550;
   border-radius: 6px;
-  outline: none;
   background: #1d1e25;
   color: #fff;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.quantity-button:hover:not(:disabled) {
+  border-color: #a18aff;
+  background: #302c40;
+}
+
+.quantity-button:focus-visible,
+.modifier-toggle:focus-visible {
+  border-color: #a18aff;
+  box-shadow: 0 0 0 2px #7357d844;
+  outline: none;
+}
+
+.quantity-button:disabled {
+  color: #777380;
+  cursor: not-allowed;
+}
+
+.quantity-value {
+  min-width: 18px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
   text-align: center;
 }
 
-.die-row input:focus-visible {
-  border-color: #a18aff;
-  box-shadow: 0 0 0 2px #7357d844;
+.modifier {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 9px;
+  padding: 0 4px;
+}
+
+.modifier-toggle {
+  padding: 6px 9px;
+  border: 1px solid #464550;
+  border-radius: 6px;
+  background: #292a33;
+  color: #e6e0f3;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.modifier-controls[hidden] {
+  display: none;
 }
 
 .roll-button {

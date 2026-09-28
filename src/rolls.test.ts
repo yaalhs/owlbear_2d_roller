@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DICE_CATALOG } from "./catalog";
 import {
+  getRollTotal,
   parseSharedRolls,
   rollDice,
   sumNumericResults,
@@ -55,6 +56,34 @@ describe("sumNumericResults", () => {
         { dieId: "fate", value: "+" },
       ]),
     ).toBe(4);
+  });
+});
+
+describe("getRollTotal", () => {
+  it("adds a signed modifier and ignores non-numeric Plot die results", () => {
+    expect(
+      getRollTotal({
+        results: [
+          { dieId: "d6", value: "4" },
+          { dieId: "plot", value: "Complication +2" },
+          { dieId: "plot", value: "Opportunity" },
+        ],
+        modifier: -1,
+      }),
+    ).toBe(3);
+  });
+});
+
+describe("Plot die", () => {
+  it("has the requested six equally likely outcomes", () => {
+    expect(DICE_CATALOG.find((die) => die.id === "plot")?.faces.map((face) => face.value)).toEqual([
+      "Opportunity",
+      "Opportunity",
+      "Blank",
+      "Blank",
+      "Complication +2",
+      "Complication +4",
+    ]);
   });
 });
 

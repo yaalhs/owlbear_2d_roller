@@ -1,6 +1,6 @@
 # Shared Dice Roller for Owlbear Rodeo
 
-A small Owlbear Rodeo extension for selecting quantities of common dice, rolling them, and sharing the latest room rolls. Rolls appear in a temporary bottom-right pop-up for other players who have the extension installed, even while its dice tray is closed. The custom pop-up is anchored at the lower-right of each player's scene viewport and stays visible for six seconds. The UI is plain TypeScript and CSS; roll history is stored in the room's namespaced metadata and live roll events are sent with Owlbear's broadcast API.
+A small Owlbear Rodeo extension for selecting dice with plus/minus buttons, rolling them, and sharing results. Rolls appear in a temporary bottom-right pop-up for other players who have the extension installed, even while its dice tray is closed. Click a roll pop-up to open the shared roll history. The custom pop-up stays visible for six seconds. Roll history is stored in the room's namespaced metadata and live roll events are sent with Owlbear's broadcast API.
 
 > **Blatantly vibecoded.** Expect rough edges; review and test before relying on it.
 
@@ -42,7 +42,11 @@ Owlbear does not run the source code directly from your computer or a GitHub rep
 
 On later pushes to `main`, GitHub Actions automatically tests, rebuilds, and republishes the extension. The source repository and published Pages files are public. The manifest in `public/` uses relative paths for the source project; the deployment workflow replaces those with absolute URLs for the Pages site, including its background listener page. After updating an installed extension, reload/remove and re-add it in Owlbear so its manifest and background page are refreshed. You can also test locally with `npm run build` and `npm run preview`, but Owlbear will still need the published HTTPS URL rather than your local preview URL.
 
-Room history is kept to the newest 12 rolls in metadata under `com.dieroller.shared-dice-roller/rolls`. It is a small room-data feed, not an archive or a private roll channel. Each roll is limited to 20 dice to keep the shared data small.
+Room history is kept to the newest 12 rolls in metadata under `com.dieroller.shared-dice-roller/rolls`. It is a small room-data feed, not an archive or a private roll channel. Each roll is limited to 20 dice to keep the shared data small. Selected dice counts reset after a successful roll. The optional signed modifier is added to the numeric total and stays set until changed; Plot die symbols do not affect that total.
+
+## Dice controls
+
+Use the `+` and `−` buttons beside each die to build a roll; each type and the whole roll are capped at 20 dice. Select **Add modifier** to show its `+`/`−` stepper. The Plot die has two Opportunity faces, two Blank faces, one Complication +2 face, and one Complication +4 face.
 
 ## Add a custom die
 
@@ -65,7 +69,7 @@ For a symbol die, add an entry like this (and add it to `DICE_CATALOG`):
 }
 ```
 
-Roll selection, per-die quantity controls, face selection, and result display are generated from the catalog. Use unique die IDs and string face values; all faces are equally likely. Each quantity field allows up to 20, with a maximum of 20 dice combined in a single roll. The displayed total sums numeric result values, so symbol-based dice display their result faces but do not contribute a numeric total.
+Roll selection, per-die quantity controls, face selection, and result display are generated from the catalog. Use unique die IDs and string face values; each face is equally likely. The `+` and `−` controls add or remove dice, with a maximum of 20 of each type and 20 total dice per roll. The optional signed modifier is added to the total; non-numeric Plot die faces do not contribute to the numeric sum.
 
 ## Add 2D face artwork
 
