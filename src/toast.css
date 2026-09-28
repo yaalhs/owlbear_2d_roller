@@ -153,3 +153,7 @@ body {
 .toast .roll-outcome-count .plot-dingbat {
   font-size: 12px;
 }
+
+.toast .roll-outcome-count + .roll-outcome-count {
+  margin-left: 18px;
+}
