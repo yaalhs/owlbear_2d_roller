@@ -112,7 +112,7 @@ if (!roll) {
   const breakdown = getPlotweaverBreakdown(roll);
   total.textContent =
     roll.mode === "plotweaver" && breakdown.hasD20 && breakdown.hasOtherDice
-      ? `d20 + Plot + mod ${breakdown.d20AndPlot} · Other ${breakdown.otherDice} · Total ${breakdown.total}`
+      ? `d20 + Plot ${breakdown.d20AndPlot} · Hit ${breakdown.hit} · Graze ${breakdown.graze} · Total ${breakdown.total}`
       : roll.modifier
         ? `Total ${getRollTotal(roll)} (${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
         : `Total ${getRollTotal(roll)}`;

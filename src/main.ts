@@ -188,7 +188,7 @@ function formatRollTotal(roll: SharedRoll): string {
     breakdown.hasD20 &&
     breakdown.hasOtherDice
   ) {
-    return `Plotweaver · d20 + Plot + modifier: ${breakdown.d20AndPlot} | Other dice: ${breakdown.otherDice} | Total: ${breakdown.total}`;
+    return `Plotweaver · d20 + Plot: ${breakdown.d20AndPlot} | Hit (other dice + modifier): ${breakdown.hit} | Graze (other dice): ${breakdown.graze} | Total: ${breakdown.total}`;
   }
   const modifierText = roll.modifier
     ? ` (dice ${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`

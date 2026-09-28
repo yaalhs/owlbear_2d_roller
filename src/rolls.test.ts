@@ -102,10 +102,12 @@ describe("getPlotweaverBreakdown", () => {
     modifier: 1,
   };
 
-  it("splits d20, Plot bonus and modifier from other dice", () => {
+  it("applies modifier to other dice for Hit and reports their unmodified Graze", () => {
     expect(getPlotweaverBreakdown(roll)).toEqual({
-      d20AndPlot: 18,
+      d20AndPlot: 17,
       otherDice: 7,
+      hit: 8,
+      graze: 7,
       total: 25,
       hasD20: true,
       hasOtherDice: true,

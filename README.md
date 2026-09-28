@@ -48,7 +48,7 @@ Room history is kept to the newest 12 rolls in metadata under `com.dieroller.sha
 
 Use the `+` and `−` buttons beside each die to build a roll; each type and the whole roll are capped at 20 dice. Select **Add modifier** to show its `+`/`−` stepper. The **Save roll setup** button keeps the selected dice and modifier after each successful roll while enabled. The Plot die has two Opportunity faces, two Blank faces, one Complication +2 face, and one Complication +4 face.
 
-Choose **Plotweaver** mode to show `d20 + Plot + modifier`, the sum of all other numeric dice, and the combined total when the roll contains both a d20 and other dice. Choose **Regular** mode to show one total for all numeric dice, the modifier, and Plot complication bonuses. The result mode is saved with each shared roll, so the pop-up and history use the mode selected by the roller.
+Choose **Plotweaver** mode to show the d20 plus Plot complication bonus, **Hit** (the other numeric dice plus the modifier), **Graze** (the other numeric dice without the modifier), and the combined total when the roll contains both a d20 and other dice. Choose **Regular** mode to show one total for all numeric dice, the modifier, and Plot complication bonuses. The result mode is saved with each shared roll, so the pop-up and history use the mode selected by the roller.
 
 ## Add a custom die
 

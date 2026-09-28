@@ -56,6 +56,8 @@ export function getRollTotal(
 export interface PlotweaverBreakdown {
   readonly d20AndPlot: number;
   readonly otherDice: number;
+  readonly hit: number;
+  readonly graze: number;
   readonly total: number;
   readonly hasD20: boolean;
   readonly hasOtherDice: boolean;
@@ -70,14 +72,16 @@ export function getPlotweaverBreakdown(
   );
   const d20AndPlot =
     sumNumericResults(d20Results) +
-    getPlotDieBonus(roll.results) +
-    (roll.modifier ?? 0);
+    getPlotDieBonus(roll.results);
   const otherDice = sumNumericResults(otherResults);
+  const hit = otherDice + (roll.modifier ?? 0);
 
   return {
     d20AndPlot,
     otherDice,
-    total: d20AndPlot + otherDice,
+    hit,
+    graze: otherDice,
+    total: d20AndPlot + hit,
     hasD20: d20Results.length > 0,
     hasOtherDice: otherResults.length > 0,
   };
