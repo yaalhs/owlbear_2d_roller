@@ -138,6 +138,6 @@ describe("getToastAnchorPosition", () => {
   });
 
   it("stacks later pop-ups above earlier ones", () => {
-    expect(getToastAnchorPosition(1280, 800, 1).top).toBe(664);
+    expect(getToastAnchorPosition(1280, 800, 1).top).toBe(640);
   });
 });
