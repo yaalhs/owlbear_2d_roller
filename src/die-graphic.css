@@ -43,6 +43,21 @@
   white-space: nowrap;
 }
 
+.die-mode-marker {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  padding: 1px 3px;
+  border: 1px solid #ded4ff;
+  border-radius: 4px;
+  background: #34275a;
+  color: #fff;
+  font-size: 7px;
+  font-weight: 800;
+  line-height: 1;
+}
+
 .plot-dingbat {
   font-family: "Cosmere Dingbats", sans-serif;
   font-size: 17px;

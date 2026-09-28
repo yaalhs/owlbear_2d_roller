@@ -7,6 +7,7 @@ import {
 import {
   formatRollSubtitle,
   getPlotDieBonus,
+  getRollOutcomeCounts,
   getPlotweaverBreakdown,
   getVisibleDieCount,
   getRollTotal,
@@ -341,6 +342,21 @@ describe("getPlotDieBonus", () => {
         { dieId: "plot", value: "Blank" },
       ]),
     ).toBe(6);
+  });
+});
+
+describe("getRollOutcomeCounts", () => {
+  it("counts selected Plot outcomes and natural d20 outcomes only", () => {
+    expect(
+      getRollOutcomeCounts([
+        { dieId: "plot", value: "Opportunity", unselectedValue: "Blank" },
+        { dieId: "plot", value: "Complication +4" },
+        { dieId: "plot", value: "Complication +2" },
+        { dieId: "d20", value: "20", unselectedValue: "1" },
+        { dieId: "d20", value: "1" },
+        { dieId: "d6", value: "20" },
+      ]),
+    ).toEqual({ opportunities: 2, complications: 3 });
   });
 });
 

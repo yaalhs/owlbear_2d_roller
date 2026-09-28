@@ -9,6 +9,7 @@ import {
 import type { DieDefinition, DieFace } from "./catalog";
 import {
   getPlotDieBonus,
+  getRollOutcomeCounts,
   getRollTotal,
   getPlotweaverBreakdown,
   getVisibleDieCount,
@@ -25,7 +26,7 @@ import type {
   AdvantageTarget,
   SharedRoll,
 } from "./rolls";
-import { createDieResult } from "./die-result";
+import { createDieResult, createRollOutcomeSummary } from "./die-result";
 import "./font.css";
 import "./die-graphic.css";
 import "./style.css";
@@ -402,7 +403,13 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
     const footer = document.createElement("div");
     footer.className = "roll-total";
     footer.textContent = formatRollTotal(roll);
-    item.append(header, resultGrid, footer);
+    const outcomes = getRollOutcomeCounts(roll.results);
+    item.append(
+      header,
+      resultGrid,
+      createRollOutcomeSummary(outcomes.opportunities, outcomes.complications),
+      footer,
+    );
     historyList.append(item);
   }
 }

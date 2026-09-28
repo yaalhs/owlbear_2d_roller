@@ -63,18 +63,18 @@ body {
 
 .toast-faces {
   display: grid;
-  grid-template-columns: repeat(5, 34px);
+  grid-template-columns: repeat(5, 43px);
   gap: 6px;
   align-content: start;
   overflow: visible;
 }
 
 .toast-faces[data-rows="2"] {
-  grid-template-rows: repeat(2, 34px);
+  grid-template-rows: repeat(2, 43px);
 }
 
 .toast-faces[data-rows="3"] {
-  grid-template-rows: repeat(3, 34px);
+  grid-template-rows: repeat(3, 43px);
 }
 
 .toast-faces[data-compact="true"] {
@@ -87,9 +87,9 @@ body {
 
 .toast-face {
   position: relative;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
+  width: 43px;
+  height: 43px;
+  flex: 0 0 43px;
 }
 
 .toast-faces[data-compact="true"] .toast-face {
@@ -109,19 +109,8 @@ body {
   font-size: 6px;
 }
 
-.toast-faces[data-compact="true"] .toast-face .die-mode-marker {
-  display: none;
-}
-
 .toast-face-unselected {
   opacity: 0.35;
-}
-
-.toast-face .die-mode-marker {
-  top: 1px;
-  left: 1px;
-  padding: 1px 2px;
-  font-size: 6px;
 }
 
 .toast-face .die-result {
@@ -146,4 +135,20 @@ body {
   font-weight: 700;
   line-height: 1.35;
   text-align: right;
+}
+
+.toast .roll-outcome-summary {
+  position: absolute;
+  right: 12px;
+  bottom: 25px;
+  z-index: 2;
+  margin: 0;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: #202128e8;
+  font-size: 9px;
+}
+
+.toast .roll-outcome-count .plot-dingbat {
+  font-size: 12px;
 }

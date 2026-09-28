@@ -1,6 +1,6 @@
 {
   "name": "2D Roller",
-  "version": "1.16.4",
+  "version": "1.16.5",
   "manifest_version": 1,
   "description": "A simple dice tray with shared room results.",
   "icon": "./icon.svg",

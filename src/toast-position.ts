@@ -3,7 +3,7 @@ export const TOAST_HEIGHT = 136;
 export const TOAST_GAP = 12;
 const TOAST_SUBTITLE_CHARS_PER_LINE = 48;
 const TOAST_SUBTITLE_LINE_HEIGHT = 14;
-const TOAST_FACE_ROW_HEIGHT = 40;
+const TOAST_FACE_ROW_HEIGHT = 49;
 const TOAST_COMPACT_FACE_ROW_HEIGHT = 24;
 
 export function getToastHeight(subtitle: string, faceCount = 0): number {

@@ -31,6 +31,12 @@ export interface DiceAdvantageSelection {
   readonly mode: AdvantageMode;
   readonly count: number;
 }
+
+export interface RollOutcomeCounts {
+  readonly opportunities: number;
+  readonly complications: number;
+}
+
 export interface AdvantageSettings {
   d20?: AdvantageMode;
   plot?: AdvantageMode;
@@ -110,6 +116,24 @@ export function getVisibleDieCount(results: readonly RolledDie[]): number {
       (result.unselectedValue === undefined ? 0 : 1) +
       (result.unselectedValues?.length ?? 0),
     0,
+  );
+}
+
+export function getRollOutcomeCounts(
+  results: readonly RolledDie[],
+): RollOutcomeCounts {
+  return results.reduce(
+    (counts, result) => {
+      if (result.dieId === "plot") {
+        if (result.value === "Opportunity") counts.opportunities += 1;
+        if (result.value.startsWith("Complication")) counts.complications += 1;
+      } else if (result.dieId === "d20") {
+        if (result.value === "20") counts.opportunities += 1;
+        if (result.value === "1") counts.complications += 1;
+      }
+      return counts;
+    },
+    { opportunities: 0, complications: 0 },
   );
 }
 

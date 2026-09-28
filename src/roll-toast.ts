@@ -3,11 +3,12 @@ import {
   findDie,
   getDieShapeArt,
 } from "./catalog";
-import { createDieResult } from "./die-result";
+import { createDieResult, createRollOutcomeSummary } from "./die-result";
 import {
   getPlotDieBonus,
   getPlotweaverBreakdown,
   formatRollSubtitle,
+  getRollOutcomeCounts,
   getVisibleDieCount,
   getRollTotal,
   parseSharedRolls,
@@ -139,7 +140,14 @@ if (!roll) {
         : roll.modifier
           ? `Total ${getRollTotal(roll)} (${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
           : `Total ${getRollTotal(roll)}`;
-  root.append(heading, subtitle, faces, total);
+  const outcomes = getRollOutcomeCounts(roll.results);
+  root.append(
+    heading,
+    subtitle,
+    faces,
+    createRollOutcomeSummary(outcomes.opportunities, outcomes.complications),
+    total,
+  );
 }
 
 function createToastFaceTile(
