@@ -11,10 +11,12 @@ import {
   getPlotDieBonus,
   getRollTotal,
   getPlotweaverBreakdown,
+  getVisibleDieCount,
   parseSharedRolls,
   rollDice,
   ROLL_BROADCAST_CHANNEL,
   sumNumericResults,
+  setDiceAdvantageSelection,
   toggleAdvantageSelection,
 } from "./rolls";
 import type {
@@ -116,6 +118,16 @@ function buildDiceControls(): void {
       );
       if (amount > 0 && (current >= MAX_DICE_PER_TYPE || total >= MAX_DICE_PER_ROLL)) return;
       quantitySelections.set(die.id, Math.max(0, current + amount));
+      const nextQuantity = quantitySelections.get(die.id) ?? 0;
+      const diceSelection = advantageSelections.dice?.[die.id];
+      if (diceSelection && diceSelection.count > nextQuantity) {
+        advantageSelections = setDiceAdvantageSelection(
+          advantageSelections,
+          die.id,
+          diceSelection.mode,
+          nextQuantity,
+        );
+      }
       count.textContent = String(quantitySelections.get(die.id));
       updateRollButton();
     };
@@ -141,14 +153,77 @@ function buildDiceControls(): void {
         rollOptions.append(option);
       }
       row.append(rollOptions);
+    } else {
+      row.append(createDiceAdvantageControls(die.id, die.name));
     }
     diceList.append(row);
     quantitySelections.set(die.id, 0);
   }
 }
 
+function createDiceAdvantageControls(dieId: string, dieName: string): HTMLElement {
+  const controls = document.createElement("div");
+  controls.className = "die-roll-options dice-advantage-options";
+  controls.setAttribute("role", "group");
+  controls.setAttribute("aria-label", `${dieName} roll options`);
+
+  for (const mode of ["advantage", "disadvantage"] as const) {
+    const group = document.createElement("span");
+    group.className = "dice-advantage-group";
+    const label = document.createElement("span");
+    label.className = "dice-advantage-label";
+    label.textContent = mode === "advantage" ? "Adv" : "Dis";
+
+    const minus = document.createElement("button");
+    minus.className = "die-roll-option dice-advantage-step";
+    minus.type = "button";
+    minus.textContent = "−";
+    minus.dataset.diceAdvantage = mode;
+    minus.dataset.diceAdvantageAction = "decrement";
+    minus.setAttribute("aria-label", `Remove one ${mode} ${dieName}`);
+    minus.addEventListener("click", () => changeDiceAdvantage(dieId, mode, -1));
+
+    const count = document.createElement("output");
+    count.className = "dice-advantage-count";
+    count.dataset.diceAdvantageCount = mode;
+    count.textContent = "0";
+    count.setAttribute("aria-label", `${dieName} ${mode} count`);
+
+    const plus = document.createElement("button");
+    plus.className = "die-roll-option dice-advantage-step";
+    plus.type = "button";
+    plus.textContent = "+";
+    plus.dataset.diceAdvantage = mode;
+    plus.dataset.diceAdvantageAction = "increment";
+    plus.setAttribute("aria-label", `Add one ${mode} ${dieName}`);
+    plus.addEventListener("click", () => changeDiceAdvantage(dieId, mode, 1));
+
+    group.append(label, minus, count, plus);
+    controls.append(group);
+  }
+  return controls;
+}
+
 function isAdvantageTarget(id: string): id is AdvantageTarget {
   return id === "d20" || id === "plot";
+}
+
+function changeDiceAdvantage(
+  dieId: string,
+  mode: AdvantageMode,
+  amount: number,
+): void {
+  const selection = advantageSelections.dice?.[dieId];
+  const currentCount = selection?.mode === mode ? selection.count : 0;
+  const quantity = quantitySelections.get(dieId) ?? 0;
+  const nextCount = Math.max(0, Math.min(quantity, currentCount + amount));
+  advantageSelections = setDiceAdvantageSelection(
+    advantageSelections,
+    dieId,
+    mode,
+    nextCount,
+  );
+  updateAdvantageControls();
 }
 
 function setAdvantage(target: AdvantageTarget, mode: AdvantageMode): void {
@@ -163,14 +238,33 @@ function setAdvantage(target: AdvantageTarget, mode: AdvantageMode): void {
 function updateAdvantageControls(): void {
   for (const row of diceList.querySelectorAll<HTMLElement>("[data-die-id]")) {
     const target = row.dataset.dieId;
-    if (!target || !isAdvantageTarget(target)) continue;
-    for (const button of row.querySelectorAll<HTMLButtonElement>(
-      "[data-advantage-mode]",
-    )) {
-      button.setAttribute(
-        "aria-pressed",
-        String(advantageSelections[target] === button.dataset.advantageMode),
-      );
+    if (!target) continue;
+    if (isAdvantageTarget(target)) {
+      for (const button of row.querySelectorAll<HTMLButtonElement>(
+        "[data-advantage-mode]",
+      )) {
+        button.setAttribute(
+          "aria-pressed",
+          String(advantageSelections[target] === button.dataset.advantageMode),
+        );
+      }
+    } else {
+      const quantity = quantitySelections.get(target) ?? 0;
+      const selection = advantageSelections.dice?.[target];
+      for (const button of row.querySelectorAll<HTMLButtonElement>(
+        "[data-dice-advantage]",
+      )) {
+        const mode = button.dataset.diceAdvantage;
+        const count = selection?.mode === mode ? selection.count : 0;
+        const increment = button.dataset.diceAdvantageAction === "increment";
+        button.disabled = increment
+          ? quantity === 0 || count >= quantity
+          : count === 0;
+        const output = button.parentElement?.querySelector<HTMLOutputElement>(
+          `[data-dice-advantage-count="${mode}"]`,
+        );
+        if (output) output.textContent = String(count);
+      }
     }
   }
 }
@@ -183,6 +277,20 @@ function selectedAdvantageSettings(): AdvantageSettings {
       advantageSelections[target]
     ) {
       selected[target] = advantageSelections[target];
+    }
+  }
+  for (const [dieId, selection] of Object.entries(
+    advantageSelections.dice ?? {},
+  )) {
+    const count = Math.min(
+      selection.count,
+      quantitySelections.get(dieId) ?? 0,
+    );
+    if (count > 0) {
+      selected.dice = {
+        ...selected.dice,
+        [dieId]: { mode: selection.mode, count },
+      };
     }
   }
   return selected;
@@ -237,7 +345,8 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
     const header = document.createElement("div");
     header.className = "roll-entry-header";
     const title = document.createElement("strong");
-    title.textContent = `Roll · ${roll.results.length} ${roll.results.length === 1 ? "die" : "dice"}`;
+    const visibleDieCount = getVisibleDieCount(roll.results);
+    title.textContent = `Roll · ${visibleDieCount} ${visibleDieCount === 1 ? "die" : "dice"}`;
     const time = document.createElement("time");
     time.dateTime = roll.timestamp;
     const parsedTime = new Date(roll.timestamp);
@@ -256,7 +365,10 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
       const mode =
         target && !markedTargets.has(target) ? roll.advantage?.[target] : undefined;
       if (target && mode) markedTargets.add(target);
-      resultGrid.append(createFaceTile(die, face, result.value, mode));
+      const dieMode =
+        mode ??
+        (!target ? roll.advantage?.dice?.[result.dieId]?.mode : undefined);
+      resultGrid.append(createFaceTile(die, face, result.value, dieMode));
       if (result.unselectedValue !== undefined) {
         const unselectedFace = die?.faces.find(
           (candidate) => candidate.value === result.unselectedValue,
@@ -266,6 +378,20 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
             die,
             unselectedFace,
             result.unselectedValue,
+            undefined,
+            true,
+          ),
+        );
+      }
+      for (const unselectedValue of result.unselectedValues ?? []) {
+        const unselectedFace = die?.faces.find(
+          (candidate) => candidate.value === unselectedValue,
+        );
+        resultGrid.append(
+          createFaceTile(
+            die,
+            unselectedFace,
+            unselectedValue,
             undefined,
             true,
           ),

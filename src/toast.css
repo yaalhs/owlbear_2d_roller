@@ -62,12 +62,27 @@ body {
 }
 
 .toast-faces {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  align-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(5, 34px);
   gap: 6px;
+  align-content: start;
   overflow: visible;
+}
+
+.toast-faces[data-rows="2"] {
+  grid-template-rows: repeat(2, 34px);
+}
+
+.toast-faces[data-rows="3"] {
+  grid-template-rows: repeat(3, 34px);
+}
+
+.toast-faces[data-compact="true"] {
+  grid-template-columns: none;
+  grid-template-rows: repeat(3, 20px);
+  grid-auto-flow: column;
+  grid-auto-columns: 20px;
+  gap: 1px;
 }
 
 .toast-face {
@@ -75,6 +90,27 @@ body {
   width: 34px;
   height: 34px;
   flex: 0 0 34px;
+}
+
+.toast-faces[data-compact="true"] .toast-face {
+  width: 20px;
+  height: 20px;
+}
+
+.toast-faces[data-compact="true"] .toast-face .die-graphic {
+  filter: none;
+}
+
+.toast-faces[data-compact="true"] .toast-face .die-result {
+  font-size: 8px;
+}
+
+.toast-faces[data-compact="true"] .toast-face .plot-die-graphic .die-result-complication {
+  font-size: 6px;
+}
+
+.toast-faces[data-compact="true"] .toast-face .die-mode-marker {
+  display: none;
 }
 
 .toast-face-unselected {
@@ -110,8 +146,4 @@ body {
   font-weight: 700;
   line-height: 1.35;
   text-align: right;
-}
-
-.toast-faces {
-  padding-right: 54px;
 }

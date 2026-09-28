@@ -184,9 +184,44 @@ h2 {
   font-weight: 700;
 }
 
+.die-roll-option:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .die-roll-option:focus-visible {
   outline: 2px solid #b5a4ff;
   outline-offset: 1px;
+}
+
+.dice-advantage-options {
+  gap: 8px;
+}
+
+.dice-advantage-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.dice-advantage-label {
+  min-width: 20px;
+  color: #c9c2da;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.dice-advantage-step {
+  width: 20px;
+  padding: 2px;
+  text-align: center;
+}
+
+.dice-advantage-count {
+  min-width: 11px;
+  color: #fff;
+  font-size: 10px;
+  text-align: center;
 }
 
 .quantity-value {

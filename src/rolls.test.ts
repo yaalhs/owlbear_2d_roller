@@ -8,12 +8,15 @@ import {
   formatRollSubtitle,
   getPlotDieBonus,
   getPlotweaverBreakdown,
+  getVisibleDieCount,
   getRollTotal,
   parseSharedRolls,
   rollDice,
   sumNumericResults,
+  setDiceAdvantageSelection,
   toggleAdvantageSelection,
 } from "./rolls";
+import type { DieDefinition } from "./catalog";
 import { getToastAnchorPosition, getToastHeight } from "./toast-position";
 
 describe("rollDice", () => {
@@ -54,6 +57,84 @@ describe("rollDice", () => {
         { d20: "disadvantage" },
       ),
     ).toEqual([{ dieId: "d20", value: "1", unselectedValue: "20" }]);
+  });
+
+  it("keeps the highest selected dice after adding one Advantage die per point", () => {
+    const samples = [0.99, 0, 0.5];
+    let sampleIndex = 0;
+
+    expect(
+      rollDice(
+        DICE_CATALOG,
+        { d6: 2 },
+        () => samples[sampleIndex++],
+        { dice: { d6: { mode: "advantage", count: 1 } } },
+      ),
+    ).toEqual([
+      { dieId: "d6", value: "6", unselectedValues: ["1"] },
+      { dieId: "d6", value: "4" },
+    ]);
+    expect(sampleIndex).toBe(3);
+  });
+
+  it("keeps the lowest selected dice and supports multiple Advantage dice", () => {
+    const samples = [0, 0.2, 0.6, 0.99];
+    let sampleIndex = 0;
+
+    expect(
+      rollDice(
+        DICE_CATALOG,
+        { d6: 2 },
+        () => samples[sampleIndex++],
+        { dice: { d6: { mode: "disadvantage", count: 2 } } },
+      ),
+    ).toEqual([
+      { dieId: "d6", value: "1", unselectedValues: ["4", "6"] },
+      { dieId: "d6", value: "2" },
+    ]);
+  });
+
+  it("applies dice Advantage to each selected kind independently", () => {
+    const samples = [0, 0.99, 0, 0.99];
+    let sampleIndex = 0;
+    const results = rollDice(
+      DICE_CATALOG,
+      { d4: 1, d8: 1 },
+      () => samples[sampleIndex++],
+      {
+        dice: {
+          d4: { mode: "advantage", count: 1 },
+          d8: { mode: "advantage", count: 1 },
+        },
+      },
+    );
+
+    expect(results).toEqual([
+      { dieId: "d4", value: "4", unselectedValues: ["1"] },
+      { dieId: "d8", value: "8", unselectedValues: ["1"] },
+    ]);
+  });
+
+  it("uses catalog face order for Advantage on custom symbol dice", () => {
+    const symbolDie: DieDefinition = {
+      id: "fate",
+      name: "Fate die",
+      shape: "cube",
+      faces: [{ value: "−" }, { value: "+" }, { value: "blank" }],
+    };
+    const samples = [0, 0.5];
+    let sampleIndex = 0;
+
+    expect(
+      rollDice(
+        [symbolDie],
+        { fate: 1 },
+        () => samples[sampleIndex++],
+        { dice: { fate: { mode: "advantage", count: 1 } } },
+      ),
+    ).toEqual([
+      { dieId: "fate", value: "+", unselectedValues: ["−"] },
+    ]);
   });
 
   it("keeps the better or worse Plot face in the requested outcome order", () => {
@@ -102,6 +183,17 @@ describe("rollDice", () => {
     ).toThrow(RangeError);
   });
 
+  it("rejects an Advantage count greater than the selected dice", () => {
+    expect(() =>
+      rollDice(
+        DICE_CATALOG,
+        { d6: 1 },
+        Math.random,
+        { dice: { d6: { mode: "advantage", count: 2 } } },
+      ),
+    ).toThrow(RangeError);
+  });
+
   it("rejects invalid quantities and random samples", () => {
     expect(() => rollDice(DICE_CATALOG, { d6: 1.5 })).toThrow(RangeError);
     expect(() => rollDice(DICE_CATALOG, { d6: 21 })).toThrow(RangeError);
@@ -138,6 +230,22 @@ describe("toggleAdvantageSelection", () => {
       ),
     ).toEqual({});
   });
+
+  it("removes dice settings in the opposite mode", () => {
+    expect(
+      setDiceAdvantageSelection(
+        {
+          d20: "disadvantage",
+          dice: { d6: { mode: "disadvantage", count: 1 } },
+        },
+        "d8",
+        "advantage",
+        1,
+      ),
+    ).toEqual({
+      dice: { d8: { mode: "advantage", count: 1 } },
+    });
+  });
 });
 
 describe("parseSharedRolls", () => {
@@ -148,9 +256,22 @@ describe("parseSharedRolls", () => {
         timestamp: "2026-01-01T00:00:00.000Z",
         results: [
           { dieId: "d6", value: "3" },
-          { dieId: "d20", value: "18", unselectedValue: "9" },
+          {
+            dieId: "d20",
+            value: "18",
+            unselectedValue: "9",
+          },
+          {
+            dieId: "d6",
+            value: "6",
+            unselectedValues: ["1", "2"],
+          },
         ],
-        advantage: { d20: "advantage", plot: "advantage" },
+        advantage: {
+          d20: "advantage",
+          plot: "advantage",
+          dice: { d6: { mode: "advantage", count: 2 } },
+        },
       },
       { id: "broken", results: "not results" },
       {
@@ -174,9 +295,11 @@ describe("parseSharedRolls", () => {
       value: "18",
       unselectedValue: "9",
     });
+    expect(rolls[0].results[2].unselectedValues).toEqual(["1", "2"]);
     expect(rolls[0].advantage).toEqual({
       d20: "advantage",
       plot: "advantage",
+      dice: { d6: { mode: "advantage", count: 2 } },
     });
     expect(parseSharedRolls("not an array")).toEqual([]);
   });
@@ -359,6 +482,19 @@ describe("roll pop-up sizing", () => {
   });
 
   it("grows the pop-up to show all wrapped dice faces", () => {
+    expect(getToastHeight("roll", 5)).toBe(136);
     expect(getToastHeight("roll", 7)).toBe(176);
+    expect(getToastHeight("roll", 11)).toBe(216);
+    expect(getToastHeight("roll", 16)).toBe(184);
+    expect(getToastHeight("roll", 40)).toBe(184);
+  });
+
+  it("counts every kept and discarded candidate die", () => {
+    expect(
+      getVisibleDieCount([
+        { dieId: "d6", value: "6", unselectedValues: ["1", "2"] },
+        { dieId: "d20", value: "20", unselectedValue: "1" },
+      ]),
+    ).toBe(6);
   });
 });

@@ -12,6 +12,7 @@ export interface RolledDie {
   readonly dieId: string;
   readonly value: string;
   readonly unselectedValue?: string;
+  readonly unselectedValues?: readonly string[];
 }
 
 export interface SharedRoll {
@@ -26,9 +27,15 @@ export interface SharedRoll {
 export type RollMode = "plotweaver" | "regular";
 export type AdvantageTarget = "d20" | "plot";
 export type AdvantageMode = "advantage" | "disadvantage";
-export type AdvantageSettings = Partial<
-  Record<AdvantageTarget, AdvantageMode>
->;
+export interface DiceAdvantageSelection {
+  readonly mode: AdvantageMode;
+  readonly count: number;
+}
+export interface AdvantageSettings {
+  d20?: AdvantageMode;
+  plot?: AdvantageMode;
+  dice?: Readonly<Record<string, DiceAdvantageSelection>>;
+}
 
 export function toggleAdvantageSelection(
   selections: AdvantageSettings,
@@ -44,11 +51,66 @@ export function toggleAdvantageSelection(
   const next: AdvantageSettings = { ...selections };
   for (const candidate of ["d20", "plot"] as const) {
     if (next[candidate] !== undefined && next[candidate] !== mode) {
-      delete next[candidate];
+      if (candidate === "d20") delete next.d20;
+      else delete next.plot;
     }
+  }
+  if (next.dice && Object.values(next.dice).some((selection) => selection.mode !== mode)) {
+    delete next.dice;
   }
   next[target] = mode;
   return next;
+}
+
+export function setDiceAdvantageSelection(
+  selections: AdvantageSettings,
+  dieId: string,
+  mode: AdvantageMode,
+  count: number,
+): AdvantageSettings {
+  if (!Number.isInteger(count) || count < 0) {
+    throw new RangeError("Advantage count must be a non-negative whole number.");
+  }
+
+  const next: AdvantageSettings = { ...selections };
+  const current = selections.dice?.[dieId];
+  if (count === 0) {
+    if (!current) return next;
+    const dice = { ...selections.dice };
+    delete dice[dieId];
+    if (Object.keys(dice).length > 0) next.dice = dice;
+    else delete next.dice;
+    return next;
+  }
+
+  const hasOppositeMode =
+    (next.d20 !== undefined && next.d20 !== mode) ||
+    (next.plot !== undefined && next.plot !== mode) ||
+    Object.values(next.dice ?? {}).some(
+      (selection) => selection.mode !== mode,
+    );
+  if (hasOppositeMode) {
+    delete next.d20;
+    delete next.plot;
+    delete next.dice;
+  }
+
+  next.dice = {
+    ...next.dice,
+    [dieId]: { mode, count },
+  };
+  return next;
+}
+
+export function getVisibleDieCount(results: readonly RolledDie[]): number {
+  return results.reduce(
+    (count, result) =>
+      count +
+      1 +
+      (result.unselectedValue === undefined ? 0 : 1) +
+      (result.unselectedValues?.length ?? 0),
+    0,
+  );
 }
 
 export function sumNumericResults(results: readonly RolledDie[]): number {
@@ -129,22 +191,23 @@ export function rollDice(
   random: () => number = Math.random,
   advantage: AdvantageSettings = {},
 ): RolledDie[] {
-  const advantageModes = Object.values(advantage);
-  if (
-    Object.keys(advantage).some((target) => target !== "d20" && target !== "plot") ||
-    advantageModes.some(
-      (mode) => mode !== "advantage" && mode !== "disadvantage",
-    ) ||
-    new Set(advantageModes).size > 1
-  ) {
+  if (!isAdvantageSettings(advantage)) {
     throw new RangeError(
-      "A roll can use Advantage or Disadvantage, but not both.",
+      "A roll has invalid Advantage or Disadvantage settings.",
     );
   }
 
   let totalDice = 0;
+  if (
+    Object.keys(advantage.dice ?? {}).some(
+      (dieId) => !dice.some((die) => die.id === dieId),
+    )
+  ) {
+    throw new RangeError("Advantage or Disadvantage references an unknown die.");
+  }
   for (const die of dice) {
     const quantity = quantities[die.id] ?? 0;
+    const diceSelection = advantage.dice?.[die.id];
     if (
       !Number.isInteger(quantity) ||
       quantity < 0 ||
@@ -152,6 +215,16 @@ export function rollDice(
     ) {
       throw new RangeError(
         `Quantity for ${die.id} must be a whole number from 0 to ${MAX_DICE_PER_TYPE}.`,
+      );
+    }
+    if (
+      diceSelection &&
+      (die.id === "d20" ||
+        die.id === "plot" ||
+        diceSelection.count > quantity)
+    ) {
+      throw new RangeError(
+        `Advantage or Disadvantage for ${die.id} cannot exceed its selected dice.`,
       );
     }
     totalDice += quantity;
@@ -164,6 +237,32 @@ export function rollDice(
 
   for (const die of dice) {
     const quantity = quantities[die.id] ?? 0;
+    const diceSelection = advantage.dice?.[die.id];
+    if (diceSelection) {
+      const candidates = Array.from(
+        { length: quantity + diceSelection.count },
+        () => rollFace(die, random),
+      ).sort((first, second) => {
+        const difference =
+          getAdvantageRank(die, first.value) -
+          getAdvantageRank(die, second.value);
+        return diceSelection.mode === "advantage" ? -difference : difference;
+      });
+      const selectedFaces = candidates.slice(0, quantity);
+      const unselectedValues = candidates
+        .slice(quantity)
+        .map((face) => face.value);
+      for (const [index, face] of selectedFaces.entries()) {
+        results.push({
+          dieId: die.id,
+          value: face.value,
+          ...(index === 0 && unselectedValues.length > 0
+            ? { unselectedValues }
+            : {}),
+        });
+      }
+      continue;
+    }
 
     for (let count = 0; count < quantity; count += 1) {
       const mode =
@@ -181,8 +280,8 @@ export function rollDice(
       }
 
       const secondFace = rollFace(die, random);
-      const firstRank = getAdvantageRank(die.id, firstFace.value);
-      const secondRank = getAdvantageRank(die.id, secondFace.value);
+      const firstRank = getAdvantageRank(die, firstFace.value);
+      const secondRank = getAdvantageRank(die, secondFace.value);
       const keepHigher = mode === "advantage";
       const keptFace =
         (keepHigher && secondRank > firstRank) ||
@@ -212,9 +311,8 @@ function rollFace(
   return die.faces[Math.floor(sample * die.faces.length)];
 }
 
-function getAdvantageRank(dieId: string, value: string): number {
-  if (dieId === "d20") return Number(value);
-  if (dieId === "plot") {
+function getAdvantageRank(die: DieDefinition, value: string): number {
+  if (die.id === "plot") {
     switch (value) {
       case "Opportunity":
         return 4;
@@ -226,7 +324,9 @@ function getAdvantageRank(dieId: string, value: string): number {
         return 1;
     }
   }
-  return 0;
+  const numericValue = Number(value);
+  if (Number.isFinite(numericValue)) return numericValue;
+  return die.faces.findIndex((face) => face.value === value);
 }
 
 export function parseSharedRolls(value: unknown): SharedRoll[] {
@@ -256,7 +356,12 @@ export function parseSharedRolls(value: unknown): SharedRoll[] {
         typeof rolledDie.dieId === "string" &&
         typeof rolledDie.value === "string" &&
         (rolledDie.unselectedValue === undefined ||
-          typeof rolledDie.unselectedValue === "string")
+          typeof rolledDie.unselectedValue === "string") &&
+        (rolledDie.unselectedValues === undefined ||
+          (Array.isArray(rolledDie.unselectedValues) &&
+            rolledDie.unselectedValues.every(
+              (value) => typeof value === "string",
+            )))
       );
     });
   });
@@ -266,15 +371,47 @@ function isAdvantageSettings(value: unknown): value is AdvantageSettings {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return false;
   }
-  const entries = Object.entries(value);
+  const settings = value as Record<string, unknown>;
   if (
-    entries.some(
-      ([target, mode]) =>
-        (target !== "d20" && target !== "plot") ||
-        (mode !== "advantage" && mode !== "disadvantage"),
+    Object.keys(settings).some(
+      (key) => key !== "d20" && key !== "plot" && key !== "dice",
     )
-  ) {
-    return false;
+  ) return false;
+
+  const modes: AdvantageMode[] = [];
+  for (const target of ["d20", "plot"] as const) {
+    const mode = settings[target];
+    if (mode !== undefined) {
+      if (mode !== "advantage" && mode !== "disadvantage") return false;
+      modes.push(mode);
+    }
   }
-  return new Set(entries.map(([, mode]) => mode)).size <= 1;
+
+  const dice = settings.dice;
+  if (dice !== undefined) {
+    if (typeof dice !== "object" || dice === null || Array.isArray(dice)) {
+      return false;
+    }
+    for (const [dieId, selection] of Object.entries(dice)) {
+      if (
+        !dieId ||
+        typeof selection !== "object" ||
+        selection === null ||
+        Array.isArray(selection)
+      ) {
+        return false;
+      }
+      const candidate = selection as Record<string, unknown>;
+      if (
+        (candidate.mode !== "advantage" &&
+          candidate.mode !== "disadvantage") ||
+        !Number.isInteger(candidate.count) ||
+        (candidate.count as number) <= 0
+      ) {
+        return false;
+      }
+      modes.push(candidate.mode);
+    }
+  }
+  return new Set(modes).size <= 1;
 }

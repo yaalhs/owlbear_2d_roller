@@ -1,6 +1,6 @@
 {
-  "name": "Shared Dice Roller",
-  "version": "1.16.2",
+  "name": "2D Roller",
+  "version": "1.16.3",
   "manifest_version": 1,
   "description": "A simple dice tray with shared room results.",
   "icon": "./icon.svg",

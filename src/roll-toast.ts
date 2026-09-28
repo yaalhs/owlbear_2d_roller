@@ -8,6 +8,7 @@ import {
   getPlotDieBonus,
   getPlotweaverBreakdown,
   formatRollSubtitle,
+  getVisibleDieCount,
   getRollTotal,
   parseSharedRolls,
   sumNumericResults,
@@ -38,7 +39,8 @@ if (!roll) {
   root.setAttribute("aria-label", "Open shared roll history");
   root.title = "Click to open shared roll history";
   const rollSubtitle = formatRollSubtitle(roll.results);
-  const popupTitle = `Roll · ${roll.results.length} ${roll.results.length === 1 ? "die" : "dice"}`;
+  const visibleDieCount = getVisibleDieCount(roll.results);
+  const popupTitle = `Roll · ${visibleDieCount} ${visibleDieCount === 1 ? "die" : "dice"}`;
   document.title = "Dice roll";
   root.setAttribute("aria-label", `${popupTitle}: ${rollSubtitle}. Click to open shared roll history.`);
 
@@ -97,7 +99,10 @@ if (!roll) {
     const mode =
       target && !markedTargets.has(target) ? roll.advantage?.[target] : undefined;
     if (target && mode) markedTargets.add(target);
-    faces.append(createToastFaceTile(result.dieId, result.value, mode));
+    const dieMode =
+      mode ??
+      (!target ? roll.advantage?.dice?.[result.dieId]?.mode : undefined);
+    faces.append(createToastFaceTile(result.dieId, result.value, dieMode));
     if (result.unselectedValue !== undefined) {
       faces.append(
         createToastFaceTile(
@@ -108,7 +113,20 @@ if (!roll) {
         ),
       );
     }
+    for (const unselectedValue of result.unselectedValues ?? []) {
+      faces.append(
+        createToastFaceTile(
+          result.dieId,
+          unselectedValue,
+          undefined,
+          true,
+        ),
+      );
+    }
   }
+  const faceCount = getVisibleDieCount(roll.results);
+  faces.dataset.rows = String(Math.min(3, Math.max(1, Math.ceil(faceCount / 5))));
+  faces.dataset.compact = String(faceCount > 15);
 
   const total = document.createElement("span");
   total.className = "toast-total";

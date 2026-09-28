@@ -3,16 +3,21 @@ export const TOAST_HEIGHT = 136;
 export const TOAST_GAP = 12;
 const TOAST_SUBTITLE_CHARS_PER_LINE = 48;
 const TOAST_SUBTITLE_LINE_HEIGHT = 14;
-const TOAST_FACES_PER_ROW = 6;
+const TOAST_FACES_PER_ROW = 5;
 const TOAST_FACE_ROW_HEIGHT = 40;
+const TOAST_COMPACT_FACE_ROW_HEIGHT = 24;
 
 export function getToastHeight(subtitle: string, faceCount = 0): number {
   const lines = Math.max(1, Math.ceil(subtitle.length / TOAST_SUBTITLE_CHARS_PER_LINE));
-  const faceRows = Math.max(1, Math.ceil(faceCount / TOAST_FACES_PER_ROW));
+  const compact = faceCount > 15;
+  const faceRows = faceCount > 10 ? 3 : faceCount > 5 ? 2 : 1;
+  const faceRowHeight = compact
+    ? TOAST_COMPACT_FACE_ROW_HEIGHT
+    : TOAST_FACE_ROW_HEIGHT;
   return (
     TOAST_HEIGHT +
     (lines - 1) * TOAST_SUBTITLE_LINE_HEIGHT +
-    (faceRows - 1) * TOAST_FACE_ROW_HEIGHT
+    (faceRows - 1) * faceRowHeight
   );
 }
 
