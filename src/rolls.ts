@@ -1,5 +1,11 @@
+import {
+  DICE_CATALOG,
+  MAX_DICE_PER_ROLL,
+  MAX_DICE_PER_TYPE,
+} from "./catalog";
 import type { DieDefinition } from "./catalog";
-import { MAX_DICE_PER_ROLL, MAX_DICE_PER_TYPE } from "./catalog";
+
+export const ROLL_BROADCAST_CHANNEL = "com.dieroller.shared-dice-roller/roll";
 
 export interface RolledDie {
   readonly dieId: string;
@@ -17,6 +23,14 @@ export function sumNumericResults(results: readonly RolledDie[]): number {
     const value = Number(result.value);
     return sum + (Number.isFinite(value) ? value : 0);
   }, 0);
+}
+
+export function formatRollNotification(roll: SharedRoll): string {
+  const faces = roll.results.map((result) => {
+    const die = DICE_CATALOG.find((candidate) => candidate.id === result.dieId);
+    return `${die?.name ?? result.dieId} ${result.value}`;
+  });
+  return `Dice rolled: ${faces.join(", ")}. Total: ${sumNumericResults(roll.results)}`;
 }
 
 export function rollDice(

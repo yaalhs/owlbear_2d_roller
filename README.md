@@ -1,6 +1,6 @@
 # Shared Dice Roller for Owlbear Rodeo
 
-A small Owlbear Rodeo extension for selecting quantities of common dice, rolling them, and sharing the latest room rolls. The UI is plain TypeScript and CSS; roll history is stored in the room's namespaced metadata and updated for other players with the Owlbear SDK.
+A small Owlbear Rodeo extension for selecting quantities of common dice, rolling them, and sharing the latest room rolls. Rolls appear as Owlbear notifications for other players who have the extension installed, even while its dice popover is closed. The UI is plain TypeScript and CSS; roll history is stored in the room's namespaced metadata and live roll notifications are sent with Owlbear's broadcast API.
 
 > **Blatantly vibecoded.** Expect rough edges; review and test before relying on it.
 
@@ -38,9 +38,9 @@ Owlbear does not run the source code directly from your computer or a GitHub rep
 2. In the repository, open **Settings → Pages** and set the build and deployment source to **GitHub Actions**.
 3. Once the workflow has been triggered, open the **Actions** tab and wait for **Deploy extension to GitHub Pages** to finish successfully. It installs dependencies, runs tests, builds the extension, writes absolute Pages URLs for the manifest icon and popover, and publishes the contents of `dist/`.
 4. The extension manifest URL is `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/manifest.json`, with your GitHub username and repository name in place of the placeholders.
-5. In Owlbear Rodeo, use the extension menu's option to add/load an extension by URL and paste that manifest URL. Open the extension in a room; each player who wants to use it should load the same extension URL.
+5. In Owlbear Rodeo, use the extension menu's option to add/load an extension by URL and paste that manifest URL. Each player who should receive roll pop-ups must load the same extension URL in that room; they do not need to open the dice popover.
 
-On later pushes to `main`, GitHub Actions automatically tests, rebuilds, and republishes the extension. The source repository and published Pages files are public. The manifest in `public/` uses relative paths for the source project; the deployment workflow replaces those with absolute URLs for the Pages site. You can also test locally with `npm run build` and `npm run preview`, but Owlbear will still need the published HTTPS URL rather than your local preview URL.
+On later pushes to `main`, GitHub Actions automatically tests, rebuilds, and republishes the extension. The source repository and published Pages files are public. The manifest in `public/` uses relative paths for the source project; the deployment workflow replaces those with absolute URLs for the Pages site, including its background listener page. You can also test locally with `npm run build` and `npm run preview`, but Owlbear will still need the published HTTPS URL rather than your local preview URL.
 
 Room history is kept to the newest 12 rolls in metadata under `com.dieroller.shared-dice-roller/rolls`. It is a small room-data feed, not an archive or a private roll channel. Each roll is limited to 20 dice to keep the shared data small.
 

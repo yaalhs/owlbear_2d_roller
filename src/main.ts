@@ -6,7 +6,13 @@ import {
   MAX_DICE_PER_TYPE,
 } from "./catalog";
 import type { DieDefinition, DieFace } from "./catalog";
-import { parseSharedRolls, rollDice, sumNumericResults } from "./rolls";
+import {
+  formatRollNotification,
+  parseSharedRolls,
+  rollDice,
+  ROLL_BROADCAST_CHANNEL,
+  sumNumericResults,
+} from "./rolls";
 import type { SharedRoll } from "./rolls";
 import "./style.css";
 
@@ -194,6 +200,26 @@ async function rollSelectedDice(): Promise<void> {
       await OBR.room.setMetadata({
         [METADATA_KEY]: [roll, ...existing].slice(0, HISTORY_LIMIT),
       });
+      try {
+        await OBR.broadcast.sendMessage(ROLL_BROADCAST_CHANNEL, roll, {
+          destination: "REMOTE",
+        });
+      } catch (error) {
+        throw new Error(
+          `Roll saved to shared history, but its pop-up could not be sent: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+      try {
+        await OBR.notification.show(formatRollNotification(roll), "INFO");
+      } catch (error) {
+        throw new Error(
+          `Roll shared with the room, but your pop-up could not be shown: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
     }
   } catch (error) {
     showError(error instanceof Error ? error.message : "The roll could not be shared.");

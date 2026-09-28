@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { DICE_CATALOG } from "./catalog";
-import { parseSharedRolls, rollDice, sumNumericResults } from "./rolls";
+import {
+  formatRollNotification,
+  parseSharedRolls,
+  rollDice,
+  sumNumericResults,
+} from "./rolls";
 
 describe("rollDice", () => {
   it("rolls the requested number of dice with deterministic face selection", () => {
@@ -50,5 +55,20 @@ describe("sumNumericResults", () => {
         { dieId: "fate", value: "+" },
       ]),
     ).toBe(4);
+  });
+});
+
+describe("formatRollNotification", () => {
+  it("formats the faces and total for the Owlbear toast", () => {
+    expect(
+      formatRollNotification({
+        id: "roll-1",
+        timestamp: "2026-01-01T00:00:00.000Z",
+        results: [
+          { dieId: "d6", value: "4" },
+          { dieId: "d20", value: "12" },
+        ],
+      }),
+    ).toBe("Dice rolled: d6 4, d20 12. Total: 16");
   });
 });

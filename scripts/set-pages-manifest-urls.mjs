@@ -17,5 +17,6 @@ const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 manifest.icon = new URL("icon.svg", siteUrl).href;
 manifest.action.icon = new URL("icon.svg", siteUrl).href;
 manifest.action.popover = new URL("index.html", siteUrl).href;
+manifest.background_url = new URL("background.html", siteUrl).href;
 
 await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
