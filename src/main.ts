@@ -153,7 +153,6 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
 
     const header = document.createElement("div");
     header.className = "roll-entry-header";
-    const total = getRollTotal(roll);
     const title = document.createElement("strong");
     title.textContent = `Roll · ${roll.results.length} ${roll.results.length === 1 ? "die" : "dice"}`;
     const time = document.createElement("time");
