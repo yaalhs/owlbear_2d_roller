@@ -125,6 +125,7 @@ function buildDiceControls(): void {
     quantityControls.append(minus, count, plus);
     row.append(identity, description, quantityControls);
     if (isAdvantageTarget(die.id)) {
+      const target = die.id;
       const rollOptions = document.createElement("div");
       rollOptions.className = "die-roll-options";
       rollOptions.setAttribute("role", "group");
@@ -136,7 +137,7 @@ function buildDiceControls(): void {
         option.dataset.advantageMode = mode;
         option.textContent = mode === "advantage" ? "Advantage" : "Disadvantage";
         option.setAttribute("aria-pressed", "false");
-        option.addEventListener("click", () => setAdvantage(die.id, mode));
+        option.addEventListener("click", () => setAdvantage(target, mode));
         rollOptions.append(option);
       }
       row.append(rollOptions);
