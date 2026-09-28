@@ -3,6 +3,7 @@ import {
   DICE_CATALOG,
   displayDieFaceValue,
   findDie,
+  getDieShapeArt,
   MAX_DICE_PER_ROLL,
   MAX_DICE_PER_TYPE,
 } from "./catalog";
@@ -18,6 +19,7 @@ import {
 } from "./rolls";
 import type { SharedRoll } from "./rolls";
 import "./font.css";
+import "./die-graphic.css";
 import "./style.css";
 
 const METADATA_KEY = "com.dieroller.shared-dice-roller/rolls";
@@ -61,9 +63,25 @@ function buildDiceControls(): void {
     row.className = "die-row";
     row.dataset.dieId = die.id;
 
+    const identity = document.createElement("div");
+    identity.className = "die-identity";
+
+    const previewFace =
+      die.id === "d6"
+        ? die.faces.find((face) => face.value === "3")
+        : undefined;
+    const shape = createDieGraphic(
+      die,
+      die.id === "d6" ? "" : die.id === "plot" ? "P" : die.name.replace(/^d/, ""),
+      previewFace,
+    );
+    shape.classList.add("die-shape-preview");
+    shape.setAttribute("aria-hidden", "true");
+
     const title = document.createElement("span");
     title.className = "die-name";
     title.textContent = die.name;
+    identity.append(shape, title);
 
     const description = document.createElement("span");
     description.className = "die-description";
@@ -104,7 +122,7 @@ function buildDiceControls(): void {
     plus.addEventListener("click", () => changeQuantity(1));
 
     quantityControls.append(minus, count, plus);
-    row.append(title, description, quantityControls);
+    row.append(identity, description, quantityControls);
     diceList.append(row);
     quantitySelections.set(die.id, 0);
   }
@@ -205,20 +223,55 @@ function createFaceTile(
 ): HTMLElement {
   const tile = document.createElement("div");
   tile.className = "face-tile";
-  if (die?.id === "plot") tile.classList.add("plot-face-tile");
   tile.title = `${die?.name ?? "Die"}: ${value}`;
-  if (face?.art) {
-    const image = document.createElement("img");
-    image.src = face.art;
-    image.alt = `${die?.name ?? "Die"} face ${value}`;
-    image.loading = "lazy";
-    image.addEventListener("error", () => image.remove());
-    tile.append(image);
-  }
-  const label = document.createElement("span");
-  label.textContent = displayDieFaceValue(die?.id ?? "", value);
-  tile.append(label);
+  tile.append(createDieGraphic(die, value, face));
   return tile;
+}
+
+function createDieGraphic(
+  die: DieDefinition | undefined,
+  value: string,
+  face?: DieFace,
+): HTMLElement {
+  const graphic = document.createElement("span");
+  graphic.className = "die-graphic";
+  if (!die) {
+    const label = document.createElement("span");
+    label.className = "die-result";
+    label.textContent = value;
+    graphic.append(label);
+    return graphic;
+  }
+
+  graphic.dataset.shape = die.shape;
+  graphic.classList.toggle("plot-die-graphic", die.id === "plot");
+
+  const shape = document.createElement("img");
+  shape.className = "die-shape-art";
+  shape.src = getDieShapeArt(die.shape);
+  shape.alt = "";
+  shape.setAttribute("aria-hidden", "true");
+  graphic.append(shape);
+
+  if (face?.art) {
+    const art = document.createElement("img");
+    art.className = "die-face-art";
+    art.src = face.art;
+    art.alt = "";
+    art.addEventListener("error", () => art.remove());
+    graphic.append(art);
+  }
+
+  if (value && !(die.id === "d6" && face?.art)) {
+    const label = document.createElement("span");
+    label.className = "die-result";
+    label.textContent = displayDieFaceValue(die.id, value);
+    if (die.id === "plot" && value.startsWith("Complication")) {
+      label.classList.add("die-result-complication");
+    }
+    graphic.append(label);
+  }
+  return graphic;
 }
 
 function setRolls(rolls: SharedRoll[]): void {

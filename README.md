@@ -52,7 +52,7 @@ Choose **Plotweaver** mode to show the d20 plus Plot complication bonus, **Hit**
 
 ## Add a custom die
 
-Dice are declared in `src/catalog.ts` in the `DICE_CATALOG` array. Each `DieDefinition` has a unique `id`, a display `name`, and an ordered `faces` array. A face's `value` is the displayed result and its optional `art` is a URL relative to the site root.
+Dice are declared in `src/catalog.ts` in the `DICE_CATALOG` array. Each `DieDefinition` has a unique `id`, a display `name`, a `shape`, and an ordered `faces` array. A face's `value` is the displayed result and its optional `art` is a URL relative to the site root. Each shape has its own SVG in `src/die-shapes/`, using the supplied white polyhedral silhouettes. Result labels are centered over the die, and the regular d6 shows pip artwork without an extra numeral.
 
 For a symbol die, add an entry like this (and add it to `DICE_CATALOG`):
 
@@ -60,6 +60,7 @@ For a symbol die, add an entry like this (and add it to `DICE_CATALOG`):
 {
   id: "fate",
   name: "Fate",
+  shape: "cube",
   faces: [
     { value: "−" },
     { value: "−" },
@@ -72,6 +73,8 @@ For a symbol die, add an entry like this (and add it to `DICE_CATALOG`):
 ```
 
 Roll selection, per-die quantity controls, face selection, and result display are generated from the catalog. Use unique die IDs and string face values; each face is equally likely. The `+` and `−` controls add or remove dice, with a maximum of 20 of each type and 20 total dice per roll. The optional signed modifier and Plot die complication bonus are included in the total.
+
+To add a custom shape, add its name to the `DieShape` type and add a matching SVG path in the `DIE_SHAPE_ART` map in `src/catalog.ts`. Create `src/die-shapes/<shape>.svg` with the silhouette and internal face edges, then use that shape on the die's `shape` property. The camera-facing result-label positions and face-art clipping are in `src/die-graphic.css`.
 
 ## Add 2D face artwork
 

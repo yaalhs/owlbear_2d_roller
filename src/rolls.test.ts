@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { DICE_CATALOG, displayDieFaceValue } from "./catalog";
+import {
+  DICE_CATALOG,
+  displayDieFaceValue,
+  getDieShapeArt,
+} from "./catalog";
 import {
   formatRollSubtitle,
   getPlotDieBonus,
@@ -137,6 +141,28 @@ describe("Plot die", () => {
     expect(displayDieFaceValue("plot", "Complication +4")).toBe("C +4");
     expect(displayDieFaceValue("plot", "Blank")).toBe("—");
     expect(displayDieFaceValue("d20", "20")).toBe("20");
+  });
+});
+
+describe("die silhouettes", () => {
+  it("defines a matching polyhedron silhouette for every catalog die", () => {
+    expect(DICE_CATALOG.map(({ id, shape }) => [id, shape])).toEqual([
+      ["d4", "tetrahedron"],
+      ["d6", "cube"],
+      ["d8", "octahedron"],
+      ["d10", "trapezohedron"],
+      ["d12", "dodecahedron"],
+      ["d20", "icosahedron"],
+      ["plot", "cube"],
+    ]);
+  });
+
+  it("maps each silhouette to its own artwork file", () => {
+    for (const die of DICE_CATALOG) {
+      expect(getDieShapeArt(die.shape)).toContain(
+        `/die-shapes/${die.shape}.svg`,
+      );
+    }
   });
 });
 

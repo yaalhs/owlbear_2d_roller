@@ -1,5 +1,9 @@
 import OBR from "@owlbear-rodeo/sdk";
-import { displayDieFaceValue, findDie } from "./catalog";
+import {
+  displayDieFaceValue,
+  findDie,
+  getDieShapeArt,
+} from "./catalog";
 import {
   getPlotDieBonus,
   getPlotweaverBreakdown,
@@ -9,6 +13,7 @@ import {
   sumNumericResults,
 } from "./rolls";
 import "./font.css";
+import "./die-graphic.css";
 import "./toast.css";
 
 const root = document.getElementById("roll-toast");
@@ -86,20 +91,40 @@ if (!roll) {
     const die = findDie(result.dieId);
     const face = die?.faces.find((candidate) => candidate.value === result.value);
     const tile = document.createElement("span");
-    tile.className = die?.id === "plot" ? "toast-face toast-face-plot" : "toast-face";
+    tile.className = "toast-face";
     tile.title = `${die?.name ?? result.dieId}: ${result.value}`;
+    const graphic = document.createElement("span");
+    graphic.className = "die-graphic";
 
-    if (face?.art) {
-      const image = document.createElement("img");
-      image.src = face.art;
-      image.alt = "";
-      image.addEventListener("error", () => image.remove());
-      tile.append(image);
+    if (die) {
+      graphic.dataset.shape = die.shape;
+      graphic.classList.toggle("plot-die-graphic", die.id === "plot");
+
+      const shape = document.createElement("img");
+      shape.className = "die-shape-art";
+      shape.src = getDieShapeArt(die.shape);
+      shape.alt = "";
+      shape.setAttribute("aria-hidden", "true");
+      graphic.append(shape);
+
+      if (face?.art) {
+        const art = document.createElement("img");
+        art.className = "die-face-art";
+        art.src = face.art;
+        art.alt = "";
+        art.addEventListener("error", () => art.remove());
+        graphic.append(art);
+      }
     }
 
     const value = document.createElement("span");
+    value.className = "die-result";
     value.textContent = displayDieFaceValue(result.dieId, result.value);
-    tile.append(value);
+    if (die?.id === "plot" && result.value.startsWith("Complication")) {
+      value.classList.add("die-result-complication");
+    }
+    if (!(die?.id === "d6" && face?.art)) graphic.append(value);
+    tile.append(graphic);
     faces.append(tile);
   }
 

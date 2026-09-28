@@ -69,37 +69,21 @@ body {
 }
 
 .toast-face {
-  position: relative;
-  display: grid;
   width: 34px;
   height: 34px;
   flex: 0 0 34px;
-  place-items: center;
-  overflow: hidden;
-  border: 1px solid #494653;
-  border-radius: 7px;
-  background: #f6f3fc;
-  color: #282331;
-  font-size: 13px;
-  font-weight: 800;
 }
 
-.toast-face img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.toast-face .die-result {
+  font-size: 12px;
 }
 
-.toast-face > span {
-  position: relative;
-  text-shadow: 0 1px 3px #fff;
+.toast-face.plot-die-graphic .die-result-complication {
+  font-size: 9px;
 }
 
-.toast-face-plot {
-  font-family: "Cosmere Dingbats", sans-serif;
-  font-size: 16px;
+.toast-face.plot-die-graphic .die-result:not(.die-result-complication) {
+  font-size: 14px;
 }
 
 .toast-total {

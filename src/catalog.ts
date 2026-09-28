@@ -6,13 +6,40 @@ export interface DieFace {
 export interface DieDefinition {
   readonly id: string;
   readonly name: string;
+  readonly shape: DieShape;
   readonly faces: readonly DieFace[];
 }
 
-function numberedDie(id: string, sides: number): DieDefinition {
+export type DieShape =
+  | "tetrahedron"
+  | "cube"
+  | "octahedron"
+  | "trapezohedron"
+  | "dodecahedron"
+  | "icosahedron";
+
+const DIE_SHAPE_ART: Record<DieShape, string> = {
+  tetrahedron: new URL("./die-shapes/tetrahedron.svg", import.meta.url).href,
+  cube: new URL("./die-shapes/cube.svg", import.meta.url).href,
+  octahedron: new URL("./die-shapes/octahedron.svg", import.meta.url).href,
+  trapezohedron: new URL("./die-shapes/trapezohedron.svg", import.meta.url).href,
+  dodecahedron: new URL("./die-shapes/dodecahedron.svg", import.meta.url).href,
+  icosahedron: new URL("./die-shapes/icosahedron.svg", import.meta.url).href,
+};
+
+export function getDieShapeArt(shape: DieShape): string {
+  return DIE_SHAPE_ART[shape];
+}
+
+function numberedDie(
+  id: string,
+  sides: number,
+  shape: DieShape,
+): DieDefinition {
   return {
     id,
     name: `d${sides}`,
+    shape,
     faces: Array.from({ length: sides }, (_, index) => ({
       value: String(index + 1),
     })),
@@ -20,22 +47,24 @@ function numberedDie(id: string, sides: number): DieDefinition {
 }
 
 export const DICE_CATALOG: readonly DieDefinition[] = [
-  numberedDie("d4", 4),
+  numberedDie("d4", 4, "tetrahedron"),
   {
     id: "d6",
     name: "d6",
+    shape: "cube",
     faces: Array.from({ length: 6 }, (_, index) => ({
       value: String(index + 1),
       art: `./art/dice/d6/${index + 1}.svg`,
     })),
   },
-  numberedDie("d8", 8),
-  numberedDie("d10", 10),
-  numberedDie("d12", 12),
-  numberedDie("d20", 20),
+  numberedDie("d8", 8, "octahedron"),
+  numberedDie("d10", 10, "trapezohedron"),
+  numberedDie("d12", 12, "dodecahedron"),
+  numberedDie("d20", 20, "icosahedron"),
   {
     id: "plot",
     name: "Plot die",
+    shape: "cube",
     faces: [
       { value: "Opportunity" },
       { value: "Opportunity" },
