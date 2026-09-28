@@ -12,6 +12,7 @@ import {
   parseSharedRolls,
   rollDice,
   sumNumericResults,
+  toggleAdvantageSelection,
 } from "./rolls";
 import { getToastAnchorPosition, getToastHeight } from "./toast-position";
 
@@ -30,11 +31,112 @@ describe("rollDice", () => {
     ]);
   });
 
+  it("keeps the higher or lower d20 roll for one selected d20", () => {
+    const samples = [0, 0.95, 0.45];
+    let sampleIndex = 0;
+    const random = () => samples[sampleIndex++];
+
+    expect(
+      rollDice(DICE_CATALOG, { d20: 2 }, random, { d20: "advantage" }),
+    ).toEqual([
+      { dieId: "d20", value: "20", unselectedValue: "1" },
+      { dieId: "d20", value: "10" },
+    ]);
+    expect(sampleIndex).toBe(3);
+
+    const disadvantageSamples = [0, 0.95];
+    let disadvantageIndex = 0;
+    expect(
+      rollDice(
+        DICE_CATALOG,
+        { d20: 1 },
+        () => disadvantageSamples[disadvantageIndex++],
+        { d20: "disadvantage" },
+      ),
+    ).toEqual([{ dieId: "d20", value: "1", unselectedValue: "20" }]);
+  });
+
+  it("keeps the better or worse Plot face in the requested outcome order", () => {
+    const plot = DICE_CATALOG.find((die) => die.id === "plot");
+    expect(plot?.faces.map((face) => face.value)).toEqual([
+      "Opportunity",
+      "Opportunity",
+      "Blank",
+      "Blank",
+      "Complication +4",
+      "Complication +2",
+    ]);
+    const samples = [0.99, 0];
+    let sampleIndex = 0;
+    const random = () => samples[sampleIndex++];
+
+    expect(
+      rollDice(DICE_CATALOG, { plot: 1 }, random, { plot: "advantage" }),
+    ).toEqual([
+      {
+        dieId: "plot",
+        value: "Opportunity",
+        unselectedValue: "Complication +2",
+      },
+    ]);
+    sampleIndex = 0;
+    expect(
+      rollDice(DICE_CATALOG, { plot: 1 }, random, { plot: "disadvantage" }),
+    ).toEqual([
+      {
+        dieId: "plot",
+        value: "Complication +2",
+        unselectedValue: "Opportunity",
+      },
+    ]);
+  });
+
+  it("rejects contradictory advantage settings on a single roll", () => {
+    expect(() =>
+      rollDice(
+        DICE_CATALOG,
+        { d20: 1, plot: 1 },
+        Math.random,
+        { d20: "advantage", plot: "disadvantage" },
+      ),
+    ).toThrow(RangeError);
+  });
+
   it("rejects invalid quantities and random samples", () => {
     expect(() => rollDice(DICE_CATALOG, { d6: 1.5 })).toThrow(RangeError);
     expect(() => rollDice(DICE_CATALOG, { d6: 21 })).toThrow(RangeError);
     expect(() => rollDice(DICE_CATALOG, { d6: 11, d20: 10 })).toThrow(RangeError);
     expect(() => rollDice(DICE_CATALOG, { d6: 1 }, () => 1)).toThrow(RangeError);
+  });
+});
+
+describe("toggleAdvantageSelection", () => {
+  it("allows the same mode on d20 and Plot, but removes the opposite mode", () => {
+    expect(
+      toggleAdvantageSelection(
+        { d20: "advantage" },
+        "plot",
+        "advantage",
+      ),
+    ).toEqual({ d20: "advantage", plot: "advantage" });
+
+    expect(
+      toggleAdvantageSelection(
+        { d20: "advantage", plot: "advantage" },
+        "plot",
+        "disadvantage",
+      ),
+    ).toEqual({ plot: "disadvantage" });
+  });
+
+  it("toggles the selected mode off", () => {
+    expect(
+      toggleAdvantageSelection(
+        { d20: "disadvantage" },
+        "d20",
+        "disadvantage",
+      ),
+    ).toEqual({});
   });
 });
 
@@ -44,13 +146,38 @@ describe("parseSharedRolls", () => {
       {
         id: "roll-1",
         timestamp: "2026-01-01T00:00:00.000Z",
-        results: [{ dieId: "d6", value: "3" }],
+        results: [
+          { dieId: "d6", value: "3" },
+          { dieId: "d20", value: "18", unselectedValue: "9" },
+        ],
+        advantage: { d20: "advantage", plot: "advantage" },
       },
       { id: "broken", results: "not results" },
+      {
+        id: "mixed",
+        timestamp: "2026-01-01T00:00:00.000Z",
+        results: [],
+        advantage: { d20: "advantage", plot: "disadvantage" },
+      },
+      {
+        id: "invalid-target",
+        timestamp: "2026-01-01T00:00:00.000Z",
+        results: [],
+        advantage: { d6: "advantage" },
+      },
     ]);
 
     expect(rolls).toHaveLength(1);
     expect(rolls[0].results[0]).toEqual({ dieId: "d6", value: "3" });
+    expect(rolls[0].results[1]).toEqual({
+      dieId: "d20",
+      value: "18",
+      unselectedValue: "9",
+    });
+    expect(rolls[0].advantage).toEqual({
+      d20: "advantage",
+      plot: "advantage",
+    });
     expect(parseSharedRolls("not an array")).toEqual([]);
   });
 });
@@ -106,13 +233,13 @@ describe("getPlotweaverBreakdown", () => {
     modifier: 1,
   };
 
-  it("applies modifier to other dice for Hit and reports their unmodified Graze", () => {
+  it("applies modifier to d20 + Plot and Hit while keeping Graze unmodified", () => {
     expect(getPlotweaverBreakdown(roll)).toEqual({
-      d20AndPlot: 17,
+      d20AndPlot: 18,
       otherDice: 7,
       hit: 8,
       graze: 7,
-      total: 25,
+      total: 26,
       hasD20: true,
       hasOtherDice: true,
     });
@@ -120,6 +247,44 @@ describe("getPlotweaverBreakdown", () => {
 
   it("regular total includes all dice, modifier and Plot complications", () => {
     expect(getRollTotal(roll)).toBe(25);
+  });
+
+  it("applies a negative modifier to both Plotweaver components", () => {
+    expect(
+      getPlotweaverBreakdown({
+        results: [
+          { dieId: "d20", value: "15" },
+          { dieId: "plot", value: "Complication +2" },
+          { dieId: "d6", value: "4" },
+        ],
+        modifier: -2,
+      }),
+    ).toMatchObject({
+      d20AndPlot: 15,
+      hit: 2,
+      graze: 4,
+      total: 17,
+    });
+  });
+
+  it("shows the modifier in d20 + Plot when no other dice are rolled", () => {
+    expect(
+      getPlotweaverBreakdown({
+        results: [
+          { dieId: "d20", value: "15" },
+          { dieId: "plot", value: "Complication +2" },
+        ],
+        modifier: 3,
+      }),
+    ).toEqual({
+      d20AndPlot: 20,
+      otherDice: 0,
+      hit: 3,
+      graze: 0,
+      total: 20,
+      hasD20: true,
+      hasOtherDice: false,
+    });
   });
 });
 
@@ -130,8 +295,8 @@ describe("Plot die", () => {
       "Opportunity",
       "Blank",
       "Blank",
-      "Complication +2",
       "Complication +4",
+      "Complication +2",
     ]);
   });
 
@@ -191,5 +356,9 @@ describe("roll pop-up sizing", () => {
 
   it("grows the pop-up to fit wrapped subtitle lines", () => {
     expect(getToastHeight("x".repeat(49))).toBe(150);
+  });
+
+  it("grows the pop-up to show all wrapped dice faces", () => {
+    expect(getToastHeight("roll", 7)).toBe(176);
   });
 });

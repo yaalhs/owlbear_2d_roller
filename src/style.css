@@ -96,7 +96,7 @@ h2 {
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   min-height: 39px;
-  gap: 8px;
+  gap: 5px 8px;
   padding: 4px 8px 4px 10px;
   border-radius: 8px;
   background: #292a33;
@@ -157,6 +157,36 @@ h2 {
 .quantity-button:disabled {
   color: #777380;
   cursor: not-allowed;
+}
+
+.die-roll-options {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-self: end;
+  gap: 4px;
+}
+
+.die-roll-option {
+  padding: 3px 7px;
+  border: 1px solid #464550;
+  border-radius: 5px;
+  background: #1d1e25;
+  color: #c9c2da;
+  font-size: 10px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.die-roll-option[aria-pressed="true"] {
+  border-color: #8068e9;
+  background: #3a3159;
+  color: #fff;
+  font-weight: 700;
+}
+
+.die-roll-option:focus-visible {
+  outline: 2px solid #b5a4ff;
+  outline-offset: 1px;
 }
 
 .quantity-value {
@@ -344,8 +374,28 @@ h2 {
 }
 
 .face-tile {
+  position: relative;
   width: 43px;
   height: 43px;
+}
+
+.face-tile-unselected {
+  opacity: 0.35;
+}
+
+.die-mode-marker {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  padding: 1px 3px;
+  border: 1px solid #ded4ff;
+  border-radius: 4px;
+  background: #34275a;
+  color: #fff;
+  font-size: 7px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .die-shape-preview .die-result {

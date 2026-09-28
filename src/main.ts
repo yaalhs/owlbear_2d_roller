@@ -15,8 +15,14 @@ import {
   rollDice,
   ROLL_BROADCAST_CHANNEL,
   sumNumericResults,
+  toggleAdvantageSelection,
 } from "./rolls";
-import type { SharedRoll } from "./rolls";
+import type {
+  AdvantageMode,
+  AdvantageSettings,
+  AdvantageTarget,
+  SharedRoll,
+} from "./rolls";
 import { createDieResult } from "./die-result";
 import "./font.css";
 import "./die-graphic.css";
@@ -40,6 +46,7 @@ const plotweaverModeButton = requiredElement<HTMLButtonElement>("plotweaver-mode
 const regularModeButton = requiredElement<HTMLButtonElement>("regular-mode");
 const saveRollButton = requiredElement<HTMLButtonElement>("save-roll-button");
 const quantitySelections = new Map<string, number>();
+let advantageSelections: AdvantageSettings = {};
 
 let roomReady = false;
 let previewMode = new URLSearchParams(window.location.search).has("preview");
@@ -117,9 +124,67 @@ function buildDiceControls(): void {
 
     quantityControls.append(minus, count, plus);
     row.append(identity, description, quantityControls);
+    if (isAdvantageTarget(die.id)) {
+      const rollOptions = document.createElement("div");
+      rollOptions.className = "die-roll-options";
+      rollOptions.setAttribute("role", "group");
+      rollOptions.setAttribute("aria-label", `${die.name} roll options`);
+      for (const mode of ["advantage", "disadvantage"] as const) {
+        const option = document.createElement("button");
+        option.className = "die-roll-option";
+        option.type = "button";
+        option.dataset.advantageMode = mode;
+        option.textContent = mode === "advantage" ? "Advantage" : "Disadvantage";
+        option.setAttribute("aria-pressed", "false");
+        option.addEventListener("click", () => setAdvantage(die.id, mode));
+        rollOptions.append(option);
+      }
+      row.append(rollOptions);
+    }
     diceList.append(row);
     quantitySelections.set(die.id, 0);
   }
+}
+
+function isAdvantageTarget(id: string): id is AdvantageTarget {
+  return id === "d20" || id === "plot";
+}
+
+function setAdvantage(target: AdvantageTarget, mode: AdvantageMode): void {
+  advantageSelections = toggleAdvantageSelection(
+    advantageSelections,
+    target,
+    mode,
+  );
+  updateAdvantageControls();
+}
+
+function updateAdvantageControls(): void {
+  for (const row of diceList.querySelectorAll<HTMLElement>("[data-die-id]")) {
+    const target = row.dataset.dieId;
+    if (!target || !isAdvantageTarget(target)) continue;
+    for (const button of row.querySelectorAll<HTMLButtonElement>(
+      "[data-advantage-mode]",
+    )) {
+      button.setAttribute(
+        "aria-pressed",
+        String(advantageSelections[target] === button.dataset.advantageMode),
+      );
+    }
+  }
+}
+
+function selectedAdvantageSettings(): AdvantageSettings {
+  const selected: AdvantageSettings = {};
+  for (const target of ["d20", "plot"] as const) {
+    if (
+      (quantitySelections.get(target) ?? 0) > 0 &&
+      advantageSelections[target]
+    ) {
+      selected[target] = advantageSelections[target];
+    }
+  }
+  return selected;
 }
 
 function selectedQuantities(): Record<string, number> {
@@ -143,6 +208,7 @@ function updateRollButton(): void {
     const plus = row.querySelector<HTMLButtonElement>(".quantity-plus");
     if (plus) plus.disabled = count >= MAX_DICE_PER_TYPE || total >= MAX_DICE_PER_ROLL;
   }
+  updateAdvantageControls();
   showError("");
 }
 
@@ -181,10 +247,29 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
 
     const resultGrid = document.createElement("div");
     resultGrid.className = "result-grid";
+    const markedTargets = new Set<AdvantageTarget>();
     for (const result of roll.results) {
       const die = findDie(result.dieId);
       const face = die?.faces.find((candidate) => candidate.value === result.value);
-      resultGrid.append(createFaceTile(die, face, result.value));
+      const target = isAdvantageTarget(result.dieId) ? result.dieId : undefined;
+      const mode =
+        target && !markedTargets.has(target) ? roll.advantage?.[target] : undefined;
+      if (target && mode) markedTargets.add(target);
+      resultGrid.append(createFaceTile(die, face, result.value, mode));
+      if (result.unselectedValue !== undefined) {
+        const unselectedFace = die?.faces.find(
+          (candidate) => candidate.value === result.unselectedValue,
+        );
+        resultGrid.append(
+          createFaceTile(
+            die,
+            unselectedFace,
+            result.unselectedValue,
+            undefined,
+            true,
+          ),
+        );
+      }
     }
 
     const footer = document.createElement("div");
@@ -202,7 +287,10 @@ function formatRollTotal(roll: SharedRoll): string {
     breakdown.hasD20 &&
     breakdown.hasOtherDice
   ) {
-    return `Plotweaver · d20 + Plot: ${breakdown.d20AndPlot} | Hit (other dice + modifier): ${breakdown.hit} | Graze (other dice): ${breakdown.graze} | Total: ${breakdown.total}`;
+    return `Plotweaver · d20 + Plot + modifier: ${breakdown.d20AndPlot} | Hit (other dice + modifier): ${breakdown.hit} | Graze (other dice): ${breakdown.graze} | Total: ${breakdown.total}`;
+  }
+  if (roll.mode === "plotweaver" && breakdown.hasD20) {
+    return `Plotweaver · d20 + Plot + modifier: ${breakdown.d20AndPlot} | Total: ${breakdown.total}`;
   }
   const modifierText = roll.modifier
     ? ` (dice ${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
@@ -214,11 +302,23 @@ function createFaceTile(
   die: DieDefinition | undefined,
   face: DieFace | undefined,
   value: string,
+  mode?: AdvantageMode,
+  unselected = false,
 ): HTMLElement {
   const tile = document.createElement("div");
   tile.className = "face-tile";
-  tile.title = `${die?.name ?? "Die"}: ${value}`;
+  tile.classList.toggle("face-tile-unselected", unselected);
+  tile.title = unselected
+    ? `${die?.name ?? "Die"} (not selected): ${value}`
+    : `${die?.name ?? "Die"}${mode ? ` (${mode}; kept ${mode === "advantage" ? "higher" : "lower"})` : ""}: ${value}`;
   tile.append(createDieGraphic(die, value, face));
+  if (mode) {
+    const marker = document.createElement("span");
+    marker.className = "die-mode-marker";
+    marker.textContent = mode === "advantage" ? "Adv" : "Dis";
+    marker.setAttribute("aria-label", mode);
+    tile.append(marker);
+  }
   return tile;
 }
 
@@ -283,13 +383,21 @@ function clearRollSelection(): void {
     if (count) count.textContent = "0";
   }
   setModifier(0);
+  advantageSelections = {};
+  updateAdvantageControls();
 }
 
 async function rollSelectedDice(): Promise<void> {
   showError("");
   rollButton.disabled = true;
   try {
-    const results = rollDice(DICE_CATALOG, selectedQuantities());
+    const selectedAdvantages = selectedAdvantageSettings();
+    const results = rollDice(
+      DICE_CATALOG,
+      selectedQuantities(),
+      Math.random,
+      selectedAdvantages,
+    );
     if (results.length === 0) return;
 
     const roll: SharedRoll = {
@@ -298,6 +406,9 @@ async function rollSelectedDice(): Promise<void> {
       results,
       mode: rollMode,
       ...(modifierEnabled && modifier !== 0 ? { modifier } : {}),
+      ...(Object.keys(selectedAdvantages).length > 0
+        ? { advantage: selectedAdvantages }
+        : {}),
     };
 
     if (previewMode) {

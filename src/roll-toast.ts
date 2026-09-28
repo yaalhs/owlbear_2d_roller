@@ -12,6 +12,7 @@ import {
   parseSharedRolls,
   sumNumericResults,
 } from "./rolls";
+import type { AdvantageMode, AdvantageTarget } from "./rolls";
 import "./font.css";
 import "./die-graphic.css";
 import "./toast.css";
@@ -87,43 +88,26 @@ if (!roll) {
 
   const faces = document.createElement("div");
   faces.className = "toast-faces";
+  const markedTargets = new Set<AdvantageTarget>();
   for (const result of roll.results) {
-    const die = findDie(result.dieId);
-    const face = die?.faces.find((candidate) => candidate.value === result.value);
-    const tile = document.createElement("span");
-    tile.className = "toast-face";
-    tile.title = `${die?.name ?? result.dieId}: ${result.value}`;
-    const graphic = document.createElement("span");
-    graphic.className = "die-graphic";
-
-    if (die) {
-      graphic.dataset.shape = die.shape;
-      graphic.classList.toggle("plot-die-graphic", die.id === "plot");
-
-      const shape = document.createElement("img");
-      shape.className = "die-shape-art";
-      shape.src = getDieShapeArt(die.shape);
-      shape.alt = "";
-      shape.setAttribute("aria-hidden", "true");
-      graphic.append(shape);
-
-      if (face?.art) {
-        const art = document.createElement("img");
-        art.className = "die-face-art";
-        art.src = face.art;
-        art.alt = "";
-        art.addEventListener("error", () => art.remove());
-        graphic.append(art);
-      }
+    const target: AdvantageTarget | undefined =
+      result.dieId === "d20" || result.dieId === "plot"
+        ? result.dieId
+        : undefined;
+    const mode =
+      target && !markedTargets.has(target) ? roll.advantage?.[target] : undefined;
+    if (target && mode) markedTargets.add(target);
+    faces.append(createToastFaceTile(result.dieId, result.value, mode));
+    if (result.unselectedValue !== undefined) {
+      faces.append(
+        createToastFaceTile(
+          result.dieId,
+          result.unselectedValue,
+          undefined,
+          true,
+        ),
+      );
     }
-
-    const value = createDieResult(result.dieId, result.value);
-    if (die?.id === "plot" && result.value.startsWith("Complication")) {
-      value.classList.add("die-result-complication");
-    }
-    if (!(die?.id === "d6" && face?.art)) graphic.append(value);
-    tile.append(graphic);
-    faces.append(tile);
   }
 
   const total = document.createElement("span");
@@ -131,9 +115,65 @@ if (!roll) {
   const breakdown = getPlotweaverBreakdown(roll);
   total.textContent =
     roll.mode === "plotweaver" && breakdown.hasD20 && breakdown.hasOtherDice
-      ? `d20 + Plot ${breakdown.d20AndPlot} · Hit ${breakdown.hit} · Graze ${breakdown.graze} · Total ${breakdown.total}`
-      : roll.modifier
-        ? `Total ${getRollTotal(roll)} (${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
-        : `Total ${getRollTotal(roll)}`;
+      ? `d20 + Plot + modifier ${breakdown.d20AndPlot} · Hit ${breakdown.hit} · Graze ${breakdown.graze} · Total ${breakdown.total}`
+      : roll.mode === "plotweaver" && breakdown.hasD20
+        ? `d20 + Plot + modifier ${breakdown.d20AndPlot} · Total ${breakdown.total}`
+        : roll.modifier
+          ? `Total ${getRollTotal(roll)} (${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
+          : `Total ${getRollTotal(roll)}`;
   root.append(heading, subtitle, faces, total);
+}
+
+function createToastFaceTile(
+  dieId: string,
+  value: string,
+  mode?: AdvantageMode,
+  unselected = false,
+): HTMLElement {
+  const die = findDie(dieId);
+  const face = die?.faces.find((candidate) => candidate.value === value);
+  const tile = document.createElement("span");
+  tile.className = "toast-face";
+  tile.classList.toggle("toast-face-unselected", unselected);
+  tile.title = unselected
+    ? `${die?.name ?? dieId} (not selected): ${value}`
+    : `${die?.name ?? dieId}${mode ? ` (${mode}; kept ${mode === "advantage" ? "higher" : "lower"})` : ""}: ${value}`;
+  const graphic = document.createElement("span");
+  graphic.className = "die-graphic";
+
+  if (die) {
+    graphic.dataset.shape = die.shape;
+    graphic.classList.toggle("plot-die-graphic", die.id === "plot");
+
+    const shape = document.createElement("img");
+    shape.className = "die-shape-art";
+    shape.src = getDieShapeArt(die.shape);
+    shape.alt = "";
+    shape.setAttribute("aria-hidden", "true");
+    graphic.append(shape);
+
+    if (face?.art) {
+      const art = document.createElement("img");
+      art.className = "die-face-art";
+      art.src = face.art;
+      art.alt = "";
+      art.addEventListener("error", () => art.remove());
+      graphic.append(art);
+    }
+  }
+
+  const faceValue = createDieResult(dieId, value);
+  if (die?.id === "plot" && value.startsWith("Complication")) {
+    faceValue.classList.add("die-result-complication");
+  }
+  if (!(die?.id === "d6" && face?.art)) graphic.append(faceValue);
+  tile.append(graphic);
+  if (mode) {
+    const marker = document.createElement("span");
+    marker.className = "die-mode-marker";
+    marker.textContent = mode === "advantage" ? "Adv" : "Dis";
+    marker.setAttribute("aria-label", mode);
+    tile.append(marker);
+  }
+  return tile;
 }

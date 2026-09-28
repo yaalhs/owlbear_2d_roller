@@ -70,8 +70,8 @@ export const DICE_CATALOG: readonly DieDefinition[] = [
       { value: "Opportunity" },
       { value: "Blank" },
       { value: "Blank" },
-      { value: "Complication +2" },
       { value: "Complication +4" },
+      { value: "Complication +2" },
     ],
   },
 ];
