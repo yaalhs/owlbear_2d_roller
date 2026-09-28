@@ -255,7 +255,7 @@ function updateAdvantageControls(): void {
         "[data-dice-advantage]",
       )) {
         const mode = button.dataset.diceAdvantage;
-        const count = selection?.mode === mode ? selection.count : 0;
+        const count = selection && selection.mode === mode ? selection.count : 0;
         const increment = button.dataset.diceAdvantageAction === "increment";
         button.disabled = increment
           ? quantity === 0 || count >= quantity
