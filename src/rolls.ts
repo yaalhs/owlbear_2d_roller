@@ -1,5 +1,4 @@
 import {
-  DICE_CATALOG,
   MAX_DICE_PER_ROLL,
   MAX_DICE_PER_TYPE,
 } from "./catalog";
