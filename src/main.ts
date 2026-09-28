@@ -75,11 +75,7 @@ function buildDiceControls(): void {
     const shape = createDieGraphic(die, maximumFace.value);
     shape.classList.add("die-shape-preview");
     shape.setAttribute("aria-hidden", "true");
-
-    const title = document.createElement("span");
-    title.className = "die-name";
-    title.textContent = die.name;
-    identity.append(shape, title);
+    identity.append(shape);
 
     const description = document.createElement("span");
     description.className = "die-description";

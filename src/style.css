@@ -115,11 +115,6 @@ h2 {
   flex: 0 0 36px;
 }
 
-.die-name {
-  min-width: 0;
-  font-weight: 700;
-}
-
 .die-description {
   color: #a7a4b2;
   font-size: 11px;
@@ -354,7 +349,7 @@ h2 {
 }
 
 .die-shape-preview .die-result {
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .die-shape-preview .die-result-complication {

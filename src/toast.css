@@ -78,11 +78,11 @@ body {
   font-size: 12px;
 }
 
-.toast-face.plot-die-graphic .die-result-complication {
-  font-size: 7px;
+.toast-face .plot-die-graphic .die-result-complication {
+  font-size: 8px;
 }
 
-.toast-face.plot-die-graphic .die-result-complication .plot-dingbat {
+.toast-face .plot-die-graphic .die-result-complication .plot-dingbat {
   font-size: 10px;
 }
 
