@@ -8,7 +8,6 @@ import type { SharedRoll } from "./rolls";
 import {
   getToastAnchorPosition,
   getToastHeight,
-  TOAST_HEIGHT,
   TOAST_GAP,
   TOAST_WIDTH,
 } from "./toast-position";
