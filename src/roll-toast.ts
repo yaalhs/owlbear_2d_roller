@@ -1,9 +1,9 @@
 import OBR from "@owlbear-rodeo/sdk";
 import {
-  displayDieFaceValue,
   findDie,
   getDieShapeArt,
 } from "./catalog";
+import { createDieResult } from "./die-result";
 import {
   getPlotDieBonus,
   getPlotweaverBreakdown,
@@ -12,6 +12,7 @@ import {
   parseSharedRolls,
   sumNumericResults,
 } from "./rolls";
+import "./font.css";
 import "./die-graphic.css";
 import "./toast.css";
 
@@ -116,9 +117,7 @@ if (!roll) {
       }
     }
 
-    const value = document.createElement("span");
-    value.className = "die-result";
-    value.textContent = displayDieFaceValue(result.dieId, result.value);
+    const value = createDieResult(result.dieId, result.value);
     if (die?.id === "plot" && result.value.startsWith("Complication")) {
       value.classList.add("die-result-complication");
     }

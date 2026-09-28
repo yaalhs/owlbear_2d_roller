@@ -353,6 +353,44 @@ h2 {
   height: 43px;
 }
 
+.die-picker-marker {
+  display: flex;
+  width: 38px;
+  flex: 0 0 38px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1px;
+}
+
+.die-picker-value {
+  display: grid;
+  height: 14px;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.die-picker-value .die-result {
+  position: static;
+  max-width: none;
+  color: inherit;
+  font-size: inherit;
+  text-shadow: none;
+  transform: none;
+}
+
+.die-picker-value .die-result-complication {
+  font-size: 9px;
+}
+
+.die-picker-marker .die-shape-preview {
+  width: 30px;
+  height: 27px;
+  flex: 0 0 27px;
+}
+
 .die-shape-preview .die-result {
   font-size: 9px;
 }

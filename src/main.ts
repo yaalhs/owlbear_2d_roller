@@ -1,7 +1,6 @@
 import OBR from "@owlbear-rodeo/sdk";
 import {
   DICE_CATALOG,
-  displayDieFaceValue,
   findDie,
   getDieShapeArt,
   MAX_DICE_PER_ROLL,
@@ -18,6 +17,8 @@ import {
   sumNumericResults,
 } from "./rolls";
 import type { SharedRoll } from "./rolls";
+import { createDieResult } from "./die-result";
+import "./font.css";
 import "./die-graphic.css";
 import "./style.css";
 
@@ -65,22 +66,36 @@ function buildDiceControls(): void {
     const identity = document.createElement("div");
     identity.className = "die-identity";
 
-    const previewFace =
-      die.id === "d6"
-        ? die.faces.find((face) => face.value === "3")
-        : undefined;
+    const pickerMarker = document.createElement("span");
+    pickerMarker.className = "die-picker-marker";
+
+    const maximumFace =
+      die.id === "plot"
+        ? die.faces[die.faces.length - 1]
+        : die.faces.reduce((maximum, face) =>
+            Number(face.value) > Number(maximum.value) ? face : maximum,
+          );
+    const isPipDie = die.id === "d6";
+    if (!isPipDie) {
+      const maximumValue = document.createElement("span");
+      maximumValue.className = "die-picker-value";
+      maximumValue.append(createDieResult(die.id, maximumFace.value));
+      pickerMarker.append(maximumValue);
+    }
+
     const shape = createDieGraphic(
       die,
-      die.id === "d6" ? "" : die.id === "plot" ? "P" : die.name.replace(/^d/, ""),
-      previewFace,
+      "",
+      isPipDie ? maximumFace : undefined,
     );
     shape.classList.add("die-shape-preview");
     shape.setAttribute("aria-hidden", "true");
+    pickerMarker.append(shape);
 
     const title = document.createElement("span");
     title.className = "die-name";
     title.textContent = die.name;
-    identity.append(shape, title);
+    identity.append(pickerMarker, title);
 
     const description = document.createElement("span");
     description.className = "die-description";
@@ -235,10 +250,7 @@ function createDieGraphic(
   const graphic = document.createElement("span");
   graphic.className = "die-graphic";
   if (!die) {
-    const label = document.createElement("span");
-    label.className = "die-result";
-    label.textContent = value;
-    graphic.append(label);
+    graphic.append(createDieResult("", value));
     return graphic;
   }
 
@@ -262,9 +274,7 @@ function createDieGraphic(
   }
 
   if (value && !(die.id === "d6" && face?.art)) {
-    const label = document.createElement("span");
-    label.className = "die-result";
-    label.textContent = displayDieFaceValue(die.id, value);
+    const label = createDieResult(die.id, value);
     if (die.id === "plot" && value.startsWith("Complication")) {
       label.classList.add("die-result-complication");
     }

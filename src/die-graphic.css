@@ -43,6 +43,15 @@
   white-space: nowrap;
 }
 
+.plot-dingbat {
+  font-family: "Cosmere Dingbats", sans-serif;
+  font-size: 17px;
+}
+
+.die-picker-value .plot-dingbat {
+  font-size: 11px;
+}
+
 .die-graphic.plot-die-graphic .die-result-complication {
   font-size: 12px;
 }
