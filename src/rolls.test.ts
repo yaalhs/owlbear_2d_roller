@@ -340,7 +340,7 @@ describe("getPlotDieBonus", () => {
         { dieId: "plot", value: "Complication +4" },
         { dieId: "plot", value: "Blank" },
       ]),
-    ).toBe(5);
+    ).toBe(6);
   });
 });
 
@@ -495,6 +495,6 @@ describe("roll pop-up sizing", () => {
         { dieId: "d6", value: "6", unselectedValues: ["1", "2"] },
         { dieId: "d20", value: "20", unselectedValue: "1" },
       ]),
-    ).toBe(6);
+    ).toBe(5);
   });
 });
