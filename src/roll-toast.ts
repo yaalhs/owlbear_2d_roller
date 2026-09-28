@@ -12,7 +12,6 @@ import {
   parseSharedRolls,
   sumNumericResults,
 } from "./rolls";
-import "./font.css";
 import "./die-graphic.css";
 import "./toast.css";
 

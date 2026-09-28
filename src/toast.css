@@ -82,10 +82,6 @@ body {
   font-size: 9px;
 }
 
-.toast-face.plot-die-graphic .die-result:not(.die-result-complication) {
-  font-size: 14px;
-}
-
 .toast-total {
   position: absolute;
   right: 12px;

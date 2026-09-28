@@ -18,7 +18,6 @@ import {
   sumNumericResults,
 } from "./rolls";
 import type { SharedRoll } from "./rolls";
-import "./font.css";
 import "./die-graphic.css";
 import "./style.css";
 

@@ -355,21 +355,9 @@ h2 {
 
 .die-shape-preview .die-result {
   font-size: 9px;
-  padding: 1px 3px;
-  border-width: 1px;
-  box-shadow: none;
-}
-
-.die-shape-preview.plot-die-graphic.die-graphic[data-shape="cube"] .die-result {
-  font-family: inherit;
-  font-size: 10px;
 }
 
 .die-shape-preview .die-result-complication {
-  font-size: 8px;
-}
-
-.die-shape-preview.plot-die-graphic .die-result-complication {
   font-size: 8px;
 }
 

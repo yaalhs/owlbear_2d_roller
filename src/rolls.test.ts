@@ -135,7 +135,7 @@ describe("Plot die", () => {
     ]);
   });
 
-  it("uses the Cosmere Dingbats labels for its symbolic results", () => {
+  it("formats symbolic Plot results as ordinary text", () => {
     expect(displayDieFaceValue("plot", "Opportunity")).toBe("O");
     expect(displayDieFaceValue("plot", "Complication +2")).toBe("C +2");
     expect(displayDieFaceValue("plot", "Complication +4")).toBe("C +4");

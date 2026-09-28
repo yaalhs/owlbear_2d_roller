@@ -33,30 +33,16 @@
   top: 50%;
   left: 50%;
   max-width: 80%;
-  padding: 2px 5px;
-  border: 1px solid #3c2c66;
-  border-radius: 999px;
-  background: #f6f3fc;
   color: #282331;
   font-size: 14px;
   font-weight: 850;
   line-height: 1;
   text-align: center;
-  box-shadow: 0 1px 2px #0008;
+  text-shadow: 0 0 2px #fff, 0 1px 1px #fff;
   transform: translate(-50%, -50%) scale(.86, .72);
   white-space: nowrap;
 }
 
-.plot-die-graphic .die-result {
-  font-family: "Cosmere Dingbats", sans-serif;
-  font-size: 17px;
-  transform: translate(-50%, -50%) scale(.86, .72);
-}
-
 .die-graphic.plot-die-graphic .die-result-complication {
   font-size: 12px;
-}
-
-.plot-die-graphic.die-graphic[data-shape="cube"] .die-result:not(.die-result-complication) {
-  font-size: 17px;
 }
