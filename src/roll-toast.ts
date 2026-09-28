@@ -3,6 +3,7 @@ import { findDie } from "./catalog";
 import {
   getPlotDieBonus,
   getPlotweaverBreakdown,
+  formatRollSubtitle,
   getRollTotal,
   parseSharedRolls,
   sumNumericResults,
@@ -29,15 +30,10 @@ if (!roll) {
   root.tabIndex = 0;
   root.setAttribute("aria-label", "Open shared roll history");
   root.title = "Click to open shared roll history";
-  const rollTitle = roll.results
-    .map((result) => {
-      const die = findDie(result.dieId);
-      return `${die?.name ?? result.dieId}: ${result.value}`;
-    })
-    .join(", ");
-  const popupTitle = `Dice rolled · ${rollTitle}`;
-  document.title = popupTitle;
-  root.setAttribute("aria-label", `${popupTitle}. Click to open shared roll history.`);
+  const rollSubtitle = formatRollSubtitle(roll.results);
+  const popupTitle = `Roll · ${roll.results.length} ${roll.results.length === 1 ? "die" : "dice"}`;
+  document.title = "Dice roll";
+  root.setAttribute("aria-label", `${popupTitle}: ${rollSubtitle}. Click to open shared roll history.`);
 
   const openHistory = () => {
     OBR.onReady(() => {
@@ -76,7 +72,12 @@ if (!roll) {
   const heading = document.createElement("strong");
   heading.className = "toast-heading";
   heading.textContent = popupTitle;
-  heading.title = popupTitle;
+  heading.title = "Click to open shared roll history";
+
+  const subtitle = document.createElement("span");
+  subtitle.className = "toast-subtitle";
+  subtitle.textContent = rollSubtitle;
+  subtitle.title = rollSubtitle;
 
   const faces = document.createElement("div");
   faces.className = "toast-faces";
@@ -115,5 +116,5 @@ if (!roll) {
       : roll.modifier
         ? `Total ${getRollTotal(roll)} (${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
         : `Total ${getRollTotal(roll)}`;
-  root.append(heading, faces, total);
+  root.append(heading, subtitle, faces, total);
 }

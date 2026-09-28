@@ -1,9 +1,15 @@
 import OBR from "@owlbear-rodeo/sdk";
-import { parseSharedRolls, ROLL_BROADCAST_CHANNEL } from "./rolls";
+import {
+  formatRollSubtitle,
+  parseSharedRolls,
+  ROLL_BROADCAST_CHANNEL,
+} from "./rolls";
 import type { SharedRoll } from "./rolls";
 import {
   getToastAnchorPosition,
+  getToastHeight,
   TOAST_HEIGHT,
+  TOAST_GAP,
   TOAST_WIDTH,
 } from "./toast-position";
 
@@ -13,7 +19,7 @@ const TOAST_DURATION_MS = 6000;
 
 interface ActiveToast {
   readonly id: string;
-  readonly slot: number;
+  readonly height: number;
   readonly timeout: ReturnType<typeof setTimeout>;
 }
 
@@ -24,6 +30,7 @@ async function showRollToast(roll: SharedRoll): Promise<void> {
   const viewportWidth = await OBR.viewport.getWidth();
   const viewportHeight = await OBR.viewport.getHeight();
   const id = `${TOAST_ID_PREFIX}/${roll.id}`;
+  const height = getToastHeight(formatRollSubtitle(roll.results));
   const toastUrl = new URL("./roll-toast.html", window.location.href);
   toastUrl.searchParams.set("roll", JSON.stringify(roll));
   toastUrl.searchParams.set("toastId", id);
@@ -36,20 +43,22 @@ async function showRollToast(roll: SharedRoll): Promise<void> {
     }
   }
 
-  const occupiedSlots = new Set(activeToasts.map((toast) => toast.slot));
-  const slot = Array.from({ length: MAX_VISIBLE_TOASTS }, (_, index) => index).find(
-    (index) => !occupiedSlots.has(index),
+  const offsetFromBottom = activeToasts.reduce(
+    (offset, toast) => offset + toast.height + TOAST_GAP,
+    0,
   );
-  if (slot === undefined) {
-    throw new Error("No dice roll pop-up slot is available.");
-  }
   await OBR.popover.open({
     id,
     url: toastUrl.href,
     width: TOAST_WIDTH,
-    height: TOAST_HEIGHT,
+    height,
     anchorReference: "POSITION",
-    anchorPosition: getToastAnchorPosition(viewportWidth, viewportHeight, slot),
+    anchorPosition: getToastAnchorPosition(
+      viewportWidth,
+      viewportHeight,
+      offsetFromBottom,
+      height,
+    ),
     anchorOrigin: { horizontal: "RIGHT", vertical: "BOTTOM" },
     transformOrigin: { horizontal: "RIGHT", vertical: "BOTTOM" },
     hidePaper: true,
@@ -63,7 +72,7 @@ async function showRollToast(roll: SharedRoll): Promise<void> {
       console.error("Could not close the dice roll pop-up.", error);
     });
   }, TOAST_DURATION_MS);
-  activeToasts.push({ id, slot, timeout });
+  activeToasts.push({ id, height, timeout });
 }
 
 OBR.onReady(() => {

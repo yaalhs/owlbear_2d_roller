@@ -40,10 +40,15 @@
             </button>
           </div>
         </div>
-        <label class="keep-selection">
-          <input id="keep-selection" type="checkbox" />
-          <span>Keep dice and modifier after rolling</span>
-        </label>
+        <button
+          id="save-roll-button"
+          class="save-roll-button"
+          type="button"
+          aria-pressed="false"
+          title="Keep the selected dice and modifier after a successful roll"
+        >
+          Save roll setup
+        </button>
         <button id="roll-button" class="roll-button" type="button" disabled>
           Roll selected dice
         </button>

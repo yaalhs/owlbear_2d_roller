@@ -1,4 +1,8 @@
-import { MAX_DICE_PER_ROLL, MAX_DICE_PER_TYPE } from "./catalog";
+import {
+  findDie,
+  MAX_DICE_PER_ROLL,
+  MAX_DICE_PER_TYPE,
+} from "./catalog";
 import type { DieDefinition } from "./catalog";
 
 export const ROLL_BROADCAST_CHANNEL = "com.dieroller.shared-dice-roller/roll";
@@ -23,6 +27,12 @@ export function sumNumericResults(results: readonly RolledDie[]): number {
     const value = Number(result.value);
     return sum + (Number.isFinite(value) ? value : 0);
   }, 0);
+}
+
+export function formatRollSubtitle(results: readonly RolledDie[]): string {
+  return results
+    .map((result) => `${findDie(result.dieId)?.name ?? result.dieId}: ${result.value}`)
+    .join(" · ");
 }
 
 export function getPlotDieBonus(results: readonly RolledDie[]): number {

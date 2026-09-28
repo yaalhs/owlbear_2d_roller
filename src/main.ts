@@ -34,7 +34,7 @@ const modifierMinus = requiredElement<HTMLButtonElement>("modifier-minus");
 const modifierPlus = requiredElement<HTMLButtonElement>("modifier-plus");
 const plotweaverModeButton = requiredElement<HTMLButtonElement>("plotweaver-mode");
 const regularModeButton = requiredElement<HTMLButtonElement>("regular-mode");
-const keepSelectionInput = requiredElement<HTMLInputElement>("keep-selection");
+const saveRollButton = requiredElement<HTMLButtonElement>("save-roll-button");
 const quantitySelections = new Map<string, number>();
 
 let roomReady = false;
@@ -43,6 +43,7 @@ let visibleRolls: SharedRoll[] = [];
 let modifier = 0;
 let modifierEnabled = false;
 let rollMode: "plotweaver" | "regular" = "plotweaver";
+let keepSelection = false;
 
 function requiredElement<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);
@@ -274,7 +275,7 @@ async function rollSelectedDice(): Promise<void> {
         );
       }
     }
-    if (!keepSelectionInput.checked) clearRollSelection();
+    if (!keepSelection) clearRollSelection();
   } catch (error) {
     showError(error instanceof Error ? error.message : "The roll could not be shared.");
   } finally {
@@ -293,6 +294,11 @@ modifierToggle.addEventListener("click", () => {
 });
 modifierMinus.addEventListener("click", () => setModifier(modifier - 1));
 modifierPlus.addEventListener("click", () => setModifier(modifier + 1));
+saveRollButton.addEventListener("click", () => {
+  keepSelection = !keepSelection;
+  saveRollButton.setAttribute("aria-pressed", String(keepSelection));
+  saveRollButton.textContent = keepSelection ? "Roll setup saved · keep after roll" : "Save roll setup";
+});
 plotweaverModeButton.addEventListener("click", () => setRollMode("plotweaver"));
 regularModeButton.addEventListener("click", () => setRollMode("regular"));
 

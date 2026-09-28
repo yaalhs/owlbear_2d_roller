@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DICE_CATALOG } from "./catalog";
 import {
+  formatRollSubtitle,
   getPlotDieBonus,
   getPlotweaverBreakdown,
   getRollTotal,
@@ -8,7 +9,7 @@ import {
   rollDice,
   sumNumericResults,
 } from "./rolls";
-import { getToastAnchorPosition } from "./toast-position";
+import { getToastAnchorPosition, getToastHeight } from "./toast-position";
 
 describe("rollDice", () => {
   it("rolls the requested number of dice with deterministic face selection", () => {
@@ -138,6 +139,21 @@ describe("getToastAnchorPosition", () => {
   });
 
   it("stacks later pop-ups above earlier ones", () => {
-    expect(getToastAnchorPosition(1280, 800, 1).top).toBe(640);
+    expect(getToastAnchorPosition(1280, 800, 148 + 12, 148).top).toBe(628);
+  });
+});
+
+describe("roll pop-up sizing", () => {
+  it("formats every die value in the subtitle", () => {
+    expect(
+      formatRollSubtitle([
+        { dieId: "d20", value: "17" },
+        { dieId: "plot", value: "Complication +4" },
+      ]),
+    ).toBe("d20: 17 · Plot die: Complication +4");
+  });
+
+  it("grows the pop-up to fit wrapped subtitle lines", () => {
+    expect(getToastHeight("x".repeat(49))).toBe(150);
   });
 });
