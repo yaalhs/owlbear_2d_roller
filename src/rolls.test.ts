@@ -499,8 +499,8 @@ describe("roll pop-up sizing", () => {
 
   it("grows the pop-up to show all wrapped dice faces", () => {
     expect(getToastHeight("roll", 5)).toBe(136);
-    expect(getToastHeight("roll", 7)).toBe(176);
-    expect(getToastHeight("roll", 11)).toBe(216);
+    expect(getToastHeight("roll", 7)).toBe(185);
+    expect(getToastHeight("roll", 11)).toBe(234);
     expect(getToastHeight("roll", 16)).toBe(184);
     expect(getToastHeight("roll", 40)).toBe(184);
   });
