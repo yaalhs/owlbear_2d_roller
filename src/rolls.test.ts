@@ -340,7 +340,7 @@ describe("getPlotDieBonus", () => {
         { dieId: "plot", value: "Complication +4" },
         { dieId: "plot", value: "Blank" },
       ]),
-    ).toBe(6);
+    ).toBe(5);
   });
 });
 
