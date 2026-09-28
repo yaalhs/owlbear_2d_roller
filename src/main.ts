@@ -11,7 +11,7 @@ import {
   getPlotDieBonus,
   getRollOutcomeCounts,
   getRollTotal,
-  getPlotweaverBreakdown,
+  formatPlotweaverBreakdown,
   getVisibleDieCount,
   parseSharedRolls,
   rollDice,
@@ -415,16 +415,9 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
 }
 
 function formatRollTotal(roll: SharedRoll): string {
-  const breakdown = getPlotweaverBreakdown(roll);
-  if (
-    roll.mode === "plotweaver" &&
-    breakdown.hasD20 &&
-    breakdown.hasOtherDice
-  ) {
-    return `Plotweaver · d20 + Plot + modifier: ${breakdown.d20AndPlot} | Hit (other dice + modifier): ${breakdown.hit} | Graze (other dice): ${breakdown.graze} | Total: ${breakdown.total}`;
-  }
-  if (roll.mode === "plotweaver" && breakdown.hasD20) {
-    return `Plotweaver · d20 + Plot + modifier: ${breakdown.d20AndPlot} | Total: ${breakdown.total}`;
+  if (roll.mode === "plotweaver") {
+    const plotweaverSummary = formatPlotweaverBreakdown(roll);
+    if (plotweaverSummary) return `Plotweaver · ${plotweaverSummary}`;
   }
   const modifierText = roll.modifier
     ? ` (dice ${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`

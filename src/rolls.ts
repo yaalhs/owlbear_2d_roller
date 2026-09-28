@@ -209,6 +209,19 @@ export function getPlotweaverBreakdown(
   };
 }
 
+export function formatPlotweaverBreakdown(
+  roll: Pick<SharedRoll, "results" | "modifier">,
+): string | undefined {
+  const breakdown = getPlotweaverBreakdown(roll);
+  if (!breakdown.hasD20) return undefined;
+
+  const components = [`d20 + Plot + modifier ${breakdown.d20AndPlot}`];
+  if (breakdown.hasOtherDice) {
+    components.push(`Hit ${breakdown.hit}`, `Graze ${breakdown.graze}`);
+  }
+  return components.join(" · ");
+}
+
 export function rollDice(
   dice: readonly DieDefinition[],
   quantities: Readonly<Record<string, number>>,

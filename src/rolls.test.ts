@@ -6,6 +6,7 @@ import {
 } from "./catalog";
 import {
   formatRollSubtitle,
+  formatPlotweaverBreakdown,
   getPlotDieBonus,
   getRollOutcomeCounts,
   getPlotweaverBreakdown,
@@ -424,6 +425,21 @@ describe("getPlotweaverBreakdown", () => {
       hasD20: true,
       hasOtherDice: false,
     });
+  });
+
+  it("formats Plotweaver components without a separate total", () => {
+    expect(formatPlotweaverBreakdown(roll)).toBe(
+      "d20 + Plot + modifier 18 · Hit 8 · Graze 7",
+    );
+    expect(
+      formatPlotweaverBreakdown({
+        results: [
+          { dieId: "d20", value: "15" },
+          { dieId: "plot", value: "Complication +2" },
+        ],
+        modifier: 3,
+      }),
+    ).toBe("d20 + Plot + modifier 20");
   });
 });
 

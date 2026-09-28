@@ -6,7 +6,7 @@ import {
 import { createDieResult, createRollOutcomeSummary } from "./die-result";
 import {
   getPlotDieBonus,
-  getPlotweaverBreakdown,
+  formatPlotweaverBreakdown,
   formatRollSubtitle,
   getRollOutcomeCounts,
   getVisibleDieCount,
@@ -131,15 +131,13 @@ if (!roll) {
 
   const total = document.createElement("span");
   total.className = "toast-total";
-  const breakdown = getPlotweaverBreakdown(roll);
-  total.textContent =
-    roll.mode === "plotweaver" && breakdown.hasD20 && breakdown.hasOtherDice
-      ? `d20 + Plot + modifier ${breakdown.d20AndPlot} · Hit ${breakdown.hit} · Graze ${breakdown.graze} · Total ${breakdown.total}`
-      : roll.mode === "plotweaver" && breakdown.hasD20
-        ? `d20 + Plot + modifier ${breakdown.d20AndPlot} · Total ${breakdown.total}`
-        : roll.modifier
-          ? `Total ${getRollTotal(roll)} (${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
-          : `Total ${getRollTotal(roll)}`;
+  const plotweaverSummary =
+    roll.mode === "plotweaver" ? formatPlotweaverBreakdown(roll) : undefined;
+  total.textContent = plotweaverSummary
+    ? plotweaverSummary
+    : roll.modifier
+      ? `Total ${getRollTotal(roll)} (${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
+      : `Total ${getRollTotal(roll)}`;
   const outcomes = getRollOutcomeCounts(roll.results);
   root.append(
     heading,
