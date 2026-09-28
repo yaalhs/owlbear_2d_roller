@@ -29,6 +29,15 @@ if (!roll) {
   root.tabIndex = 0;
   root.setAttribute("aria-label", "Open shared roll history");
   root.title = "Click to open shared roll history";
+  const rollTitle = roll.results
+    .map((result) => {
+      const die = findDie(result.dieId);
+      return `${die?.name ?? result.dieId}: ${result.value}`;
+    })
+    .join(", ");
+  const popupTitle = `Dice rolled · ${rollTitle}`;
+  document.title = popupTitle;
+  root.setAttribute("aria-label", `${popupTitle}. Click to open shared roll history.`);
 
   const openHistory = () => {
     OBR.onReady(() => {
@@ -66,9 +75,8 @@ if (!roll) {
 
   const heading = document.createElement("strong");
   heading.className = "toast-heading";
-  heading.textContent = `Dice rolled · ${roll.results.length} ${
-    roll.results.length === 1 ? "die" : "dice"
-  }`;
+  heading.textContent = popupTitle;
+  heading.title = popupTitle;
 
   const faces = document.createElement("div");
   faces.className = "toast-faces";

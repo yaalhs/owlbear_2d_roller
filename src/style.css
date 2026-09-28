@@ -226,6 +226,23 @@ h2 {
   outline-offset: 2px;
 }
 
+.keep-selection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 4px 0;
+  color: #c9c2da;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.keep-selection input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #8068e9;
+}
+
 .roll-button {
   width: 100%;
   margin-top: 12px;

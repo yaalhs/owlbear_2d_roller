@@ -34,6 +34,7 @@ const modifierMinus = requiredElement<HTMLButtonElement>("modifier-minus");
 const modifierPlus = requiredElement<HTMLButtonElement>("modifier-plus");
 const plotweaverModeButton = requiredElement<HTMLButtonElement>("plotweaver-mode");
 const regularModeButton = requiredElement<HTMLButtonElement>("regular-mode");
+const keepSelectionInput = requiredElement<HTMLInputElement>("keep-selection");
 const quantitySelections = new Map<string, number>();
 
 let roomReady = false;
@@ -228,13 +229,14 @@ function setModifier(value: number): void {
   modifierPlus.disabled = value >= 99;
 }
 
-function clearSelectedDice(): void {
+function clearRollSelection(): void {
   for (const [id] of quantitySelections) {
     quantitySelections.set(id, 0);
     const row = diceList.querySelector<HTMLElement>(`[data-die-id="${id}"]`);
     const count = row?.querySelector<HTMLOutputElement>(".quantity-value");
     if (count) count.textContent = "0";
   }
+  setModifier(0);
 }
 
 async function rollSelectedDice(): Promise<void> {
@@ -272,7 +274,7 @@ async function rollSelectedDice(): Promise<void> {
         );
       }
     }
-    clearSelectedDice();
+    if (!keepSelectionInput.checked) clearRollSelection();
   } catch (error) {
     showError(error instanceof Error ? error.message : "The roll could not be shared.");
   } finally {

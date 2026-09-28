@@ -42,11 +42,11 @@ Owlbear does not run the source code directly from your computer or a GitHub rep
 
 On later pushes to `main`, GitHub Actions automatically tests, rebuilds, and republishes the extension. The source repository and published Pages files are public. The manifest in `public/` uses relative paths for the source project; the deployment workflow replaces those with absolute URLs for the Pages site, including its background listener page. After updating an installed extension, reload/remove and re-add it in Owlbear so its manifest and background page are refreshed. You can also test locally with `npm run build` and `npm run preview`, but Owlbear will still need the published HTTPS URL rather than your local preview URL.
 
-Room history is kept to the newest 12 rolls in metadata under `com.dieroller.shared-dice-roller/rolls`. It is a small room-data feed, not an archive or a private roll channel. Each roll is limited to 20 dice to keep the shared data small. Selected dice counts reset after a successful roll. The optional signed modifier is included in the total and stays set until changed. Plot die Complication +2/+4 faces add 2/4 to the result; Opportunity and Blank add zero.
+Room history is kept to the newest 12 rolls in metadata under `com.dieroller.shared-dice-roller/rolls`. It is a small room-data feed, not an archive or a private roll channel. Each roll is limited to 20 dice to keep the shared data small. By default, selected dice and the modifier reset after a successful roll; enable **Keep dice and modifier after rolling** to retain both. Plot die Complication +2/+4 faces add 2/4 to the result; Opportunity and Blank add zero.
 
 ## Dice controls
 
-Use the `+` and `−` buttons beside each die to build a roll; each type and the whole roll are capped at 20 dice. Select **Add modifier** to show its `+`/`−` stepper. The Plot die has two Opportunity faces, two Blank faces, one Complication +2 face, and one Complication +4 face.
+Use the `+` and `−` buttons beside each die to build a roll; each type and the whole roll are capped at 20 dice. Select **Add modifier** to show its `+`/`−` stepper. The Plot die has two Opportunity faces, two Blank faces, one Complication +2 face, and one Complication +4 face. The keep-selection checkbox controls whether dice counts and the modifier reset after a successful roll.
 
 Choose **Plotweaver** mode to show `d20 + Plot + modifier`, the sum of all other numeric dice, and the combined total when the roll contains both a d20 and other dice. Choose **Regular** mode to show one total for all numeric dice, the modifier, and Plot complication bonuses. The result mode is saved with each shared roll, so the pop-up and history use the mode selected by the roller.
 
