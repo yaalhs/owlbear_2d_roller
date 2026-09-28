@@ -79,7 +79,11 @@ body {
 }
 
 .toast-face.plot-die-graphic .die-result-complication {
-  font-size: 9px;
+  font-size: 7px;
+}
+
+.toast-face.plot-die-graphic .die-result-complication .plot-dingbat {
+  font-size: 10px;
 }
 
 .toast-total {

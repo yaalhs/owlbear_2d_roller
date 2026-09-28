@@ -66,36 +66,20 @@ function buildDiceControls(): void {
     const identity = document.createElement("div");
     identity.className = "die-identity";
 
-    const pickerMarker = document.createElement("span");
-    pickerMarker.className = "die-picker-marker";
-
     const maximumFace =
       die.id === "plot"
-        ? die.faces[die.faces.length - 1]
+        ? die.faces.find((face) => face.value === "Opportunity") ?? die.faces[0]
         : die.faces.reduce((maximum, face) =>
             Number(face.value) > Number(maximum.value) ? face : maximum,
           );
-    const isPipDie = die.id === "d6";
-    if (!isPipDie) {
-      const maximumValue = document.createElement("span");
-      maximumValue.className = "die-picker-value";
-      maximumValue.append(createDieResult(die.id, maximumFace.value));
-      pickerMarker.append(maximumValue);
-    }
-
-    const shape = createDieGraphic(
-      die,
-      "",
-      isPipDie ? maximumFace : undefined,
-    );
+    const shape = createDieGraphic(die, maximumFace.value);
     shape.classList.add("die-shape-preview");
     shape.setAttribute("aria-hidden", "true");
-    pickerMarker.append(shape);
 
     const title = document.createElement("span");
     title.className = "die-name";
     title.textContent = die.name;
-    identity.append(pickerMarker, title);
+    identity.append(shape, title);
 
     const description = document.createElement("span");
     description.className = "die-description";
