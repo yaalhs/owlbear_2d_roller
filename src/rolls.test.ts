@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DICE_CATALOG } from "./catalog";
+import { DICE_CATALOG, displayDieFaceValue } from "./catalog";
 import {
   formatRollSubtitle,
   getPlotDieBonus,
@@ -130,6 +130,14 @@ describe("Plot die", () => {
       "Complication +4",
     ]);
   });
+
+  it("uses the Cosmere Dingbats labels for its symbolic results", () => {
+    expect(displayDieFaceValue("plot", "Opportunity")).toBe("O");
+    expect(displayDieFaceValue("plot", "Complication +2")).toBe("C +2");
+    expect(displayDieFaceValue("plot", "Complication +4")).toBe("C +4");
+    expect(displayDieFaceValue("plot", "Blank")).toBe("—");
+    expect(displayDieFaceValue("d20", "20")).toBe("20");
+  });
 });
 
 describe("getToastAnchorPosition", () => {
@@ -152,7 +160,7 @@ describe("roll pop-up sizing", () => {
         { dieId: "d20", value: "17" },
         { dieId: "plot", value: "Complication +4" },
       ]),
-    ).toBe("d20: 17 · Plot die: Complication +4");
+    ).toBe("d20: 17 · Plot die: C +4");
   });
 
   it("grows the pop-up to fit wrapped subtitle lines", () => {

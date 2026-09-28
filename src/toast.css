@@ -98,7 +98,8 @@ body {
 }
 
 .toast-face-plot {
-  font-size: 9px;
+  font-family: "Cosmere Dingbats", sans-serif;
+  font-size: 16px;
 }
 
 .toast-total {

@@ -1,5 +1,5 @@
 import OBR from "@owlbear-rodeo/sdk";
-import { findDie } from "./catalog";
+import { displayDieFaceValue, findDie } from "./catalog";
 import {
   getPlotDieBonus,
   getPlotweaverBreakdown,
@@ -8,6 +8,7 @@ import {
   parseSharedRolls,
   sumNumericResults,
 } from "./rolls";
+import "./font.css";
 import "./toast.css";
 
 const root = document.getElementById("roll-toast");
@@ -97,12 +98,7 @@ if (!roll) {
     }
 
     const value = document.createElement("span");
-    value.textContent =
-      result.value === "Opportunity"
-        ? "Oppty"
-        : result.value === "Blank"
-          ? "—"
-          : result.value.replace("Complication ", "C");
+    value.textContent = displayDieFaceValue(result.dieId, result.value);
     tile.append(value);
     faces.append(tile);
   }

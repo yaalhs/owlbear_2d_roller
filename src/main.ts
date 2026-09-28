@@ -1,6 +1,7 @@
 import OBR from "@owlbear-rodeo/sdk";
 import {
   DICE_CATALOG,
+  displayDieFaceValue,
   findDie,
   MAX_DICE_PER_ROLL,
   MAX_DICE_PER_TYPE,
@@ -16,6 +17,7 @@ import {
   sumNumericResults,
 } from "./rolls";
 import type { SharedRoll } from "./rolls";
+import "./font.css";
 import "./style.css";
 
 const METADATA_KEY = "com.dieroller.shared-dice-roller/rolls";
@@ -203,6 +205,7 @@ function createFaceTile(
 ): HTMLElement {
   const tile = document.createElement("div");
   tile.className = "face-tile";
+  if (die?.id === "plot") tile.classList.add("plot-face-tile");
   tile.title = `${die?.name ?? "Die"}: ${value}`;
   if (face?.art) {
     const image = document.createElement("img");
@@ -213,7 +216,7 @@ function createFaceTile(
     tile.append(image);
   }
   const label = document.createElement("span");
-  label.textContent = value;
+  label.textContent = displayDieFaceValue(die?.id ?? "", value);
   tile.append(label);
   return tile;
 }

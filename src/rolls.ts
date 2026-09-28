@@ -31,7 +31,10 @@ export function sumNumericResults(results: readonly RolledDie[]): number {
 
 export function formatRollSubtitle(results: readonly RolledDie[]): string {
   return results
-    .map((result) => `${findDie(result.dieId)?.name ?? result.dieId}: ${result.value}`)
+    .map(
+      (result) =>
+        `${findDie(result.dieId)?.name ?? result.dieId}: ${displayDieFaceValue(result.dieId, result.value)}`,
+    )
     .join(" · ");
 }
 

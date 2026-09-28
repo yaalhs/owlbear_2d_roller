@@ -53,3 +53,11 @@ export const MAX_DICE_PER_ROLL = 20;
 export function findDie(id: string): DieDefinition | undefined {
   return DICE_CATALOG.find((die) => die.id === id);
 }
+
+export function displayDieFaceValue(dieId: string, value: string): string {
+  if (dieId !== "plot") return value;
+  if (value === "Opportunity") return "O";
+  if (value === "Blank") return "—";
+  const complication = /^Complication \+([24])$/.exec(value);
+  return complication ? `C +${complication[1]}` : value;
+}

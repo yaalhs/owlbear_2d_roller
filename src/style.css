@@ -350,6 +350,11 @@ h2 {
   font-weight: 800;
 }
 
+.face-tile.plot-face-tile {
+  font-family: "Cosmere Dingbats", sans-serif;
+  font-size: 20px;
+}
+
 .face-tile img {
   position: absolute;
   inset: 0;

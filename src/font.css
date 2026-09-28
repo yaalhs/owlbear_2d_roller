@@ -1,0 +1,7 @@
+@font-face {
+  font-family: "Cosmere Dingbats";
+  src: url("./assets/CosmereDingbats-Regular.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
