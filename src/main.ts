@@ -7,7 +7,9 @@ import {
 } from "./catalog";
 import type { DieDefinition, DieFace } from "./catalog";
 import {
+  getPlotDieBonus,
   getRollTotal,
+  getPlotweaverBreakdown,
   parseSharedRolls,
   rollDice,
   ROLL_BROADCAST_CHANNEL,
@@ -30,6 +32,8 @@ const modifierControls = requiredElement<HTMLDivElement>("modifier-controls");
 const modifierValueOutput = requiredElement<HTMLOutputElement>("modifier-value");
 const modifierMinus = requiredElement<HTMLButtonElement>("modifier-minus");
 const modifierPlus = requiredElement<HTMLButtonElement>("modifier-plus");
+const plotweaverModeButton = requiredElement<HTMLButtonElement>("plotweaver-mode");
+const regularModeButton = requiredElement<HTMLButtonElement>("regular-mode");
 const quantitySelections = new Map<string, number>();
 
 let roomReady = false;
@@ -37,6 +41,7 @@ let previewMode = new URLSearchParams(window.location.search).has("preview");
 let visibleRolls: SharedRoll[] = [];
 let modifier = 0;
 let modifierEnabled = false;
+let rollMode: "plotweaver" | "regular" = "plotweaver";
 
 function requiredElement<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);
@@ -82,7 +87,10 @@ function buildDiceControls(): void {
 
     const changeQuantity = (amount: number) => {
       const current = quantitySelections.get(die.id) ?? 0;
-      const total = [...quantitySelections.values()].reduce((sum, quantity) => sum + quantity, 0);
+      const total = [...quantitySelections.values()].reduce(
+        (sum, quantity) => sum + quantity,
+        0,
+      );
       if (amount > 0 && (current >= MAX_DICE_PER_TYPE || total >= MAX_DICE_PER_ROLL)) return;
       quantitySelections.set(die.id, Math.max(0, current + amount));
       count.textContent = String(quantitySelections.get(die.id));
@@ -108,7 +116,10 @@ function selectedQuantities(): Record<string, number> {
 
 function updateRollButton(): void {
   const hasDice = [...quantitySelections.values()].some((quantity) => quantity > 0);
-  const total = [...quantitySelections.values()].reduce((sum, quantity) => sum + quantity, 0);
+  const total = [...quantitySelections.values()].reduce(
+    (sum, quantity) => sum + quantity,
+    0,
+  );
   rollButton.disabled = !roomReady || !hasDice;
   for (const row of diceList.querySelectorAll<HTMLElement>("[data-die-id]")) {
     const id = row.dataset.dieId;
@@ -163,12 +174,25 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
 
     const footer = document.createElement("div");
     footer.className = "roll-total";
-    footer.textContent = roll.modifier
-      ? `Total: ${total} (${sumNumericResults(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
-      : `Total: ${total}`;
+    footer.textContent = formatRollTotal(roll);
     item.append(header, resultGrid, footer);
     historyList.append(item);
   }
+}
+
+function formatRollTotal(roll: SharedRoll): string {
+  const breakdown = getPlotweaverBreakdown(roll);
+  if (
+    roll.mode === "plotweaver" &&
+    breakdown.hasD20 &&
+    breakdown.hasOtherDice
+  ) {
+    return `Plotweaver · d20 + Plot + modifier: ${breakdown.d20AndPlot} | Other dice: ${breakdown.otherDice} | Total: ${breakdown.total}`;
+  }
+  const modifierText = roll.modifier
+    ? ` (dice ${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
+    : "";
+  return `Total: ${getRollTotal(roll)}${modifierText}`;
 }
 
 function createFaceTile(
@@ -225,6 +249,7 @@ async function rollSelectedDice(): Promise<void> {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       results,
+      mode: rollMode,
       ...(modifierEnabled && modifier !== 0 ? { modifier } : {}),
     };
 
@@ -267,6 +292,14 @@ modifierToggle.addEventListener("click", () => {
 });
 modifierMinus.addEventListener("click", () => setModifier(modifier - 1));
 modifierPlus.addEventListener("click", () => setModifier(modifier + 1));
+plotweaverModeButton.addEventListener("click", () => setRollMode("plotweaver"));
+regularModeButton.addEventListener("click", () => setRollMode("regular"));
+
+function setRollMode(mode: "plotweaver" | "regular"): void {
+  rollMode = mode;
+  plotweaverModeButton.setAttribute("aria-pressed", String(mode === "plotweaver"));
+  regularModeButton.setAttribute("aria-pressed", String(mode === "regular"));
+}
 
 if (previewMode) {
   statusLabel.textContent = "Local preview";

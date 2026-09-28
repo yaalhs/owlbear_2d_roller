@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DICE_CATALOG } from "./catalog";
 import {
+  getPlotDieBonus,
+  getPlotweaverBreakdown,
   getRollTotal,
   parseSharedRolls,
   rollDice,
@@ -60,7 +62,7 @@ describe("sumNumericResults", () => {
 });
 
 describe("getRollTotal", () => {
-  it("adds a signed modifier and ignores non-numeric Plot die results", () => {
+  it("adds Plot die complications and a signed modifier", () => {
     expect(
       getRollTotal({
         results: [
@@ -70,7 +72,47 @@ describe("getRollTotal", () => {
         ],
         modifier: -1,
       }),
-    ).toBe(3);
+    ).toBe(5);
+  });
+});
+
+describe("getPlotDieBonus", () => {
+  it("counts Complication +2 and +4 faces but not Opportunity or Blank", () => {
+    expect(
+      getPlotDieBonus([
+        { dieId: "plot", value: "Complication +2" },
+        { dieId: "plot", value: "Opportunity" },
+        { dieId: "plot", value: "Complication +4" },
+        { dieId: "plot", value: "Blank" },
+      ]),
+    ).toBe(6);
+  });
+});
+
+describe("getPlotweaverBreakdown", () => {
+  const roll = {
+    results: [
+      { dieId: "d20", value: "15" },
+      { dieId: "plot", value: "Complication +2" },
+      { dieId: "plot", value: "Opportunity" },
+      { dieId: "d6", value: "4" },
+      { dieId: "d8", value: "3" },
+    ],
+    modifier: 1,
+  };
+
+  it("splits d20, Plot bonus and modifier from other dice", () => {
+    expect(getPlotweaverBreakdown(roll)).toEqual({
+      d20AndPlot: 18,
+      otherDice: 7,
+      total: 25,
+      hasD20: true,
+      hasOtherDice: true,
+    });
+  });
+
+  it("regular total includes all dice, modifier and Plot complications", () => {
+    expect(getRollTotal(roll)).toBe(25);
   });
 });
 

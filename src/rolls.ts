@@ -1,7 +1,4 @@
-import {
-  MAX_DICE_PER_ROLL,
-  MAX_DICE_PER_TYPE,
-} from "./catalog";
+import { MAX_DICE_PER_ROLL, MAX_DICE_PER_TYPE } from "./catalog";
 import type { DieDefinition } from "./catalog";
 
 export const ROLL_BROADCAST_CHANNEL = "com.dieroller.shared-dice-roller/roll";
@@ -16,7 +13,10 @@ export interface SharedRoll {
   readonly timestamp: string;
   readonly results: readonly RolledDie[];
   readonly modifier?: number;
+  readonly mode?: RollMode;
 }
+
+export type RollMode = "plotweaver" | "regular";
 
 export function sumNumericResults(results: readonly RolledDie[]): number {
   return results.reduce((sum, result) => {
@@ -25,8 +25,52 @@ export function sumNumericResults(results: readonly RolledDie[]): number {
   }, 0);
 }
 
-export function getRollTotal(roll: Pick<SharedRoll, "results" | "modifier">): number {
-  return sumNumericResults(roll.results) + (roll.modifier ?? 0);
+export function getPlotDieBonus(results: readonly RolledDie[]): number {
+  return results.reduce((bonus, result) => {
+    if (result.dieId !== "plot") return bonus;
+    const complication = /^Complication \+(\d+)$/.exec(result.value);
+    return bonus + (complication ? Number(complication[1]) : 0);
+  }, 0);
+}
+
+export function getRollTotal(
+  roll: Pick<SharedRoll, "results" | "modifier">,
+): number {
+  return (
+    sumNumericResults(roll.results) +
+    getPlotDieBonus(roll.results) +
+    (roll.modifier ?? 0)
+  );
+}
+
+export interface PlotweaverBreakdown {
+  readonly d20AndPlot: number;
+  readonly otherDice: number;
+  readonly total: number;
+  readonly hasD20: boolean;
+  readonly hasOtherDice: boolean;
+}
+
+export function getPlotweaverBreakdown(
+  roll: Pick<SharedRoll, "results" | "modifier">,
+): PlotweaverBreakdown {
+  const d20Results = roll.results.filter((result) => result.dieId === "d20");
+  const otherResults = roll.results.filter(
+    (result) => result.dieId !== "d20" && result.dieId !== "plot",
+  );
+  const d20AndPlot =
+    sumNumericResults(d20Results) +
+    getPlotDieBonus(roll.results) +
+    (roll.modifier ?? 0);
+  const otherDice = sumNumericResults(otherResults);
+
+  return {
+    d20AndPlot,
+    otherDice,
+    total: d20AndPlot + otherDice,
+    hasD20: d20Results.length > 0,
+    hasOtherDice: otherResults.length > 0,
+  };
 }
 
 export function rollDice(
@@ -81,7 +125,10 @@ export function parseSharedRolls(value: unknown): SharedRoll[] {
       typeof candidate.id !== "string" ||
       typeof candidate.timestamp !== "string" ||
       !Array.isArray(candidate.results) ||
-      (candidate.modifier !== undefined && !Number.isInteger(candidate.modifier))
+      (candidate.modifier !== undefined && !Number.isInteger(candidate.modifier)) ||
+      (candidate.mode !== undefined &&
+        candidate.mode !== "plotweaver" &&
+        candidate.mode !== "regular")
     ) {
       return false;
     }

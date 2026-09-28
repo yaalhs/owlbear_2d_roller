@@ -183,6 +183,49 @@ h2 {
   display: none;
 }
 
+.roll-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 5px 4px 0;
+}
+
+.roll-mode-label {
+  color: #c9c2da;
+  font-size: 12px;
+}
+
+.roll-mode-controls {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid #34323d;
+  border-radius: 8px;
+  background: #1d1e25;
+}
+
+.mode-button {
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #c9c2da;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.mode-button[aria-pressed="true"] {
+  background: #8068e9;
+  color: #fff;
+  font-weight: 700;
+}
+
+.mode-button:focus-visible {
+  outline: 2px solid #b5a4ff;
+  outline-offset: 2px;
+}
+
 .roll-button {
   width: 100%;
   margin-top: 12px;

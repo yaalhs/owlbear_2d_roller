@@ -1,5 +1,5 @@
 export const TOAST_WIDTH = 320;
-export const TOAST_HEIGHT = 112;
+export const TOAST_HEIGHT = 136;
 export const TOAST_GAP = 12;
 
 export function getToastAnchorPosition(

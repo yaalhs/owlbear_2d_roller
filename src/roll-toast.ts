@@ -1,6 +1,12 @@
 import OBR from "@owlbear-rodeo/sdk";
 import { findDie } from "./catalog";
-import { getRollTotal, parseSharedRolls, sumNumericResults } from "./rolls";
+import {
+  getPlotDieBonus,
+  getPlotweaverBreakdown,
+  getRollTotal,
+  parseSharedRolls,
+  sumNumericResults,
+} from "./rolls";
 import "./toast.css";
 
 const root = document.getElementById("roll-toast");
@@ -94,8 +100,12 @@ if (!roll) {
 
   const total = document.createElement("span");
   total.className = "toast-total";
-  total.textContent = roll.modifier
-    ? `Total ${getRollTotal(roll)} (${sumNumericResults(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
-    : `Total ${getRollTotal(roll)}`;
+  const breakdown = getPlotweaverBreakdown(roll);
+  total.textContent =
+    roll.mode === "plotweaver" && breakdown.hasD20 && breakdown.hasOtherDice
+      ? `d20 + Plot + mod ${breakdown.d20AndPlot} · Other ${breakdown.otherDice} · Total ${breakdown.total}`
+      : roll.modifier
+        ? `Total ${getRollTotal(roll)} (${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
+        : `Total ${getRollTotal(roll)}`;
   root.append(heading, faces, total);
 }
