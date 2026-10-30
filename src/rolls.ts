@@ -558,7 +558,7 @@ export function parseSharedRolls(value: unknown): SharedRoll[] {
         candidate.modifier === undefined &&
         candidate.advantage === undefined &&
         (candidate.fitdCut === undefined ||
-          ((candidate.fitdCut as number) < candidate.results.length &&
+          ((candidate.fitdCut as number) <= candidate.results.length &&
             candidate.fitdCut ===
               (candidate.results[0] as RolledDie).unselectedValues?.length))
       );
