@@ -88,6 +88,7 @@ h2 {
 
 .dice-list {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -175,6 +176,7 @@ h2 {
   display: flex;
   grid-column: 1 / -1;
   justify-self: end;
+  flex-wrap: wrap;
   gap: 4px;
 }
 
