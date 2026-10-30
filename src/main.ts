@@ -89,43 +89,40 @@ function buildDiceControls(): void {
     row.className = "die-row";
     row.dataset.dieId = die.id;
 
-    const identity = document.createElement("div");
-    identity.className = "die-identity";
-
     const maximumFace =
       die.id === "plot"
         ? die.faces.find((face) => face.value === "Opportunity") ?? die.faces[0]
         : die.faces.reduce((maximum, face) =>
             Number(face.value) > Number(maximum.value) ? face : maximum,
           );
+    const identity = document.createElement("div");
+    identity.className = "die-identity";
+
+    const addDieButton = document.createElement("button");
+    addDieButton.className = "die-add-button quantity-die-button";
+    addDieButton.type = "button";
+    addDieButton.setAttribute("aria-label", `Add one ${die.name}`);
     const shape = createDieGraphic(die, maximumFace.value);
     shape.classList.add("die-shape-preview");
     shape.setAttribute("aria-hidden", "true");
-    identity.append(shape);
 
-    const description = document.createElement("span");
-    description.className = "die-description";
-    description.textContent = `${die.faces.length} faces`;
+    const count = document.createElement("output");
+    count.className = "die-selection-count";
+    count.dataset.dieCount = die.id;
+    count.textContent = "0";
+    count.setAttribute("aria-label", `0 ${die.name} selected`);
+    addDieButton.append(shape, count);
+    identity.append(addDieButton);
 
     const quantityControls = document.createElement("div");
     quantityControls.className = "quantity-controls";
 
     const minus = document.createElement("button");
-    minus.className = "quantity-button";
+    minus.className = "quantity-button die-remove-button";
     minus.type = "button";
     minus.textContent = "−";
+    minus.disabled = true;
     minus.setAttribute("aria-label", `Remove one ${die.name}`);
-
-    const count = document.createElement("output");
-    count.className = "quantity-value";
-    count.textContent = "0";
-    count.setAttribute("aria-label", `${die.name} selected`);
-
-    const plus = document.createElement("button");
-    plus.className = "quantity-button quantity-plus";
-    plus.type = "button";
-    plus.textContent = "+";
-    plus.setAttribute("aria-label", `Add one ${die.name}`);
 
     const changeQuantity = (amount: number) => {
       const current = quantitySelections.get(die.id) ?? 0;
@@ -143,13 +140,31 @@ function buildDiceControls(): void {
         );
       }
       count.textContent = String(quantitySelections.get(die.id));
+      count.setAttribute(
+        "aria-label",
+        `${quantitySelections.get(die.id)} ${die.name} selected`,
+      );
+      addDieButton.setAttribute(
+        "aria-label",
+        `Add one ${die.name} (${quantitySelections.get(die.id)} selected)`,
+      );
       updateRollButton();
     };
     minus.addEventListener("click", () => changeQuantity(-1));
-    plus.addEventListener("click", () => changeQuantity(1));
+    addDieButton.addEventListener("click", () => changeQuantity(1));
 
-    quantityControls.append(minus, count, plus);
-    row.append(identity, description, quantityControls);
+    quantityControls.append(minus);
+    const dieInfo = document.createElement("div");
+    dieInfo.className = "die-info";
+    const name = document.createElement("span");
+    name.className = "die-name";
+    name.textContent = die.name;
+    const description = document.createElement("span");
+    description.className = "die-description";
+    description.textContent = `${die.faces.length} faces`;
+    dieInfo.append(name, description);
+    identity.append(dieInfo);
+    row.append(identity, quantityControls);
     if (isAdvantageTarget(die.id)) {
       const target = die.id;
       const rollOptions = document.createElement("div");
@@ -173,6 +188,7 @@ function buildDiceControls(): void {
     diceList.append(row);
     quantitySelections.set(die.id, 0);
     modifierDiceSelections.set(die.id, 0);
+    if (die.id === "plot") continue;
     const modifierDieButton = document.createElement("button");
     modifierDieButton.className = "modifier-die-button";
     modifierDieButton.type = "button";
@@ -181,7 +197,7 @@ function buildDiceControls(): void {
     modifierDieGraphic.classList.add("modifier-die-graphic");
     modifierDieGraphic.setAttribute("aria-hidden", "true");
     const modifierDieCount = document.createElement("output");
-    modifierDieCount.className = "modifier-die-count";
+    modifierDieCount.className = "die-selection-count";
     modifierDieCount.dataset.modifierDieCount = die.id;
     modifierDieCount.textContent = "0";
     modifierDieCount.setAttribute("aria-label", `0 ${die.name} modifier dice selected`);
@@ -412,8 +428,10 @@ function updateRollButton(): void {
   for (const row of diceList.querySelectorAll<HTMLElement>("[data-die-id]")) {
     const id = row.dataset.dieId;
     const count = id ? quantitySelections.get(id) ?? 0 : 0;
-    const plus = row.querySelector<HTMLButtonElement>(".quantity-plus");
-    if (plus) plus.disabled = count >= MAX_DICE_PER_TYPE || total >= MAX_DICE_PER_ROLL;
+    const add = row.querySelector<HTMLButtonElement>(".quantity-die-button");
+    if (add) add.disabled = count >= MAX_DICE_PER_TYPE || total >= MAX_DICE_PER_ROLL;
+    const remove = row.querySelector<HTMLButtonElement>(".die-remove-button");
+    if (remove) remove.disabled = count === 0;
   }
   updateAdvantageControls();
   updateModifierDiceControls();
@@ -613,8 +631,13 @@ function clearRollSelection(): void {
   for (const [id] of quantitySelections) {
     quantitySelections.set(id, 0);
     const row = diceList.querySelector<HTMLElement>(`[data-die-id="${id}"]`);
-    const count = row?.querySelector<HTMLOutputElement>(".quantity-value");
-    if (count) count.textContent = "0";
+    const count = row?.querySelector<HTMLOutputElement>("[data-die-count]");
+    if (count) {
+      count.textContent = "0";
+      count.setAttribute("aria-label", `0 ${findDie(id)?.name ?? id} selected`);
+    }
+    const add = row?.querySelector<HTMLButtonElement>(".quantity-die-button");
+    if (add) add.setAttribute("aria-label", `Add one ${findDie(id)?.name ?? id}`);
   }
   setModifier(0);
   for (const dieId of modifierDiceSelections.keys()) {

@@ -93,7 +93,7 @@ h2 {
 
 .die-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   min-height: 39px;
   gap: 5px 8px;
@@ -106,18 +106,30 @@ h2 {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
+}
+
+.die-info {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.die-name {
+  color: #eee9ff;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.die-description {
+  color: #a7a4b2;
+  font-size: 10px;
 }
 
 .die-shape-preview {
   width: 36px;
   height: 36px;
   flex: 0 0 36px;
-}
-
-.die-description {
-  color: #a7a4b2;
-  font-size: 11px;
 }
 
 .quantity-controls,
@@ -286,6 +298,7 @@ h2 {
   gap: 2px;
 }
 
+.die-add-button,
 .modifier-die-button {
   position: relative;
   width: 40px;
@@ -297,20 +310,38 @@ h2 {
   cursor: pointer;
 }
 
+.die-add-button:hover:not(:disabled),
+.die-add-button:focus-visible,
 .modifier-die-button:hover:not(:disabled),
 .modifier-die-button:focus-visible {
   border-color: #a18aff;
   background: #302c40;
 }
 
+.die-add-button:focus-visible,
 .modifier-die-button:focus-visible {
   outline: 2px solid #b5a4ff;
   outline-offset: 1px;
 }
 
+.die-add-button:disabled,
 .modifier-die-button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.die-add-button .die-result {
+  font-size: 11px;
+}
+
+.die-add-button .die-shape-preview {
+  width: 100%;
+  height: 100%;
+  flex-basis: 100%;
+}
+
+.die-add-button .die-result-complication {
+  font-size: 7px;
 }
 
 .modifier-die-graphic .die-result {
@@ -321,7 +352,7 @@ h2 {
   font-size: 7px;
 }
 
-.modifier-die-count {
+.die-selection-count {
   position: absolute;
   z-index: 4;
   right: -3px;
@@ -337,6 +368,7 @@ h2 {
   line-height: 1.2;
 }
 
+.die-remove-button,
 .modifier-die-remove {
   width: 19px;
   height: 24px;
@@ -349,6 +381,7 @@ h2 {
   cursor: pointer;
 }
 
+.die-remove-button:disabled,
 .modifier-die-remove:disabled {
   opacity: 0.35;
   cursor: not-allowed;
@@ -533,8 +566,8 @@ h2 {
 
 .roll-total {
   margin-top: 8px;
-  color: #c7bddf;
-  font-size: 11px;
+  color: #f0eaff;
+  font-size: calc(11px + 1pt);
   font-weight: 700;
   text-align: right;
 }
