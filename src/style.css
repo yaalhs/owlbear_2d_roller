@@ -155,6 +155,11 @@ h2 {
   cursor: pointer;
 }
 
+.die-remove-button {
+  font-size: 20px;
+  font-weight: 600;
+}
+
 .quantity-button:hover:not(:disabled) {
   border-color: #a18aff;
   background: #302c40;
@@ -568,10 +573,16 @@ h2 {
 
 .roll-total {
   margin-top: 8px;
-  color: #f0eaff;
-  font-size: calc(11px + 1pt);
+  color: #c7bddf;
+  font-size: 11px;
   font-weight: 700;
   text-align: right;
+}
+
+.calculated-result {
+  color: #f0eaff;
+  font-size: calc(1em + 1pt);
+  font-weight: 800;
 }
 
 .roll-outcome-summary {

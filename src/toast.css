@@ -137,11 +137,17 @@ body {
   right: 12px;
   bottom: 8px;
   left: 12px;
-  color: #f0eaff;
-  font-size: calc(10px + 1pt);
+  color: #c7bddf;
+  font-size: 10px;
   font-weight: 700;
   line-height: 1.35;
   text-align: right;
+}
+
+.toast-total .calculated-result {
+  color: #f0eaff;
+  font-size: calc(1em + 1pt);
+  font-weight: 800;
 }
 
 .toast .roll-outcome-summary {

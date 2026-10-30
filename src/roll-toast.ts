@@ -8,16 +8,13 @@ import {
   createModifierDieMarker,
   createRollOutcomeSummary,
 } from "./die-result";
+import { appendRollSummary } from "./roll-summary";
 import {
-  getPlotDieBonus,
   getAllRollResults,
-  formatPlotweaverBreakdown,
   formatRollSubtitle,
   getRollOutcomeCounts,
   getVisibleDieCount,
-  getRollTotal,
   parseSharedRolls,
-  sumNumericResults,
 } from "./rolls";
 import type { AdvantageMode, AdvantageTarget } from "./rolls";
 import "./font.css";
@@ -143,13 +140,7 @@ if (!roll) {
 
   const total = document.createElement("span");
   total.className = "toast-total";
-  const plotweaverSummary =
-    roll.mode === "plotweaver" ? formatPlotweaverBreakdown(roll) : undefined;
-  total.textContent = plotweaverSummary
-    ? plotweaverSummary
-    : roll.modifier
-      ? `Total ${getRollTotal(roll)} (${sumNumericResults(allResults) + getPlotDieBonus(allResults)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
-      : `Total ${getRollTotal(roll)}`;
+  appendRollSummary(total, roll);
   const outcomes = getRollOutcomeCounts(allResults);
   root.append(
     heading,

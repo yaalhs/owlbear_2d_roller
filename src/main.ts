@@ -8,17 +8,12 @@ import {
 } from "./catalog";
 import type { DieDefinition, DieFace } from "./catalog";
 import {
-  getPlotDieBonus,
   getAllRollResults,
-  getModifierDiceValue,
   getRollOutcomeCounts,
-  getRollTotal,
-  formatPlotweaverBreakdown,
   getVisibleDieCount,
   parseSharedRolls,
   rollDice,
   ROLL_BROADCAST_CHANNEL,
-  sumNumericResults,
   setDiceAdvantageSelection,
   toggleAdvantageSelection,
 } from "./rolls";
@@ -33,6 +28,7 @@ import {
   createModifierDieMarker,
   createRollOutcomeSummary,
 } from "./die-result";
+import { appendRollSummary } from "./roll-summary";
 import "./font.css";
 import "./die-graphic.css";
 import "./style.css";
@@ -527,7 +523,10 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
 
     const footer = document.createElement("div");
     footer.className = "roll-total";
-    footer.textContent = formatRollTotal(roll);
+    appendRollSummary(footer, roll, {
+      showPlotweaverLabel: true,
+      totalColon: true,
+    });
     const outcomes = getRollOutcomeCounts(allResults);
     item.append(
       header,
@@ -537,17 +536,6 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
     );
     historyList.append(item);
   }
-}
-
-function formatRollTotal(roll: SharedRoll): string {
-  if (roll.mode === "plotweaver") {
-    const plotweaverSummary = formatPlotweaverBreakdown(roll);
-    if (plotweaverSummary) return `Plotweaver · ${plotweaverSummary}`;
-  }
-  const modifierText = roll.modifier
-    ? ` (dice ${sumNumericResults(roll.results) + getPlotDieBonus(roll.results) + getModifierDiceValue(roll.modifierDice)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
-    : "";
-  return `Total: ${getRollTotal(roll)}${modifierText}`;
 }
 
 function createFaceTile(
