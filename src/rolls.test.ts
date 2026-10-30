@@ -8,8 +8,10 @@ import {
   formatRollSubtitle,
   formatPlotweaverBreakdown,
   getPlotDieBonus,
+  getAllRollResults,
   getRollOutcomeCounts,
   getPlotweaverBreakdown,
+  getModifierDiceValue,
   getVisibleDieCount,
   getRollTotal,
   parseSharedRolls,
@@ -269,6 +271,7 @@ describe("parseSharedRolls", () => {
             unselectedValues: ["1", "2"],
           },
         ],
+        modifierDice: [{ dieId: "d4", value: "2" }],
         advantage: {
           d20: "advantage",
           plot: "advantage",
@@ -298,6 +301,7 @@ describe("parseSharedRolls", () => {
       unselectedValue: "9",
     });
     expect(rolls[0].results[2].unselectedValues).toEqual(["1", "2"]);
+    expect(rolls[0].modifierDice).toEqual([{ dieId: "d4", value: "2" }]);
     expect(rolls[0].advantage).toEqual({
       d20: "advantage",
       plot: "advantage",
@@ -331,6 +335,28 @@ describe("getRollTotal", () => {
       }),
     ).toBe(5);
   });
+
+  it("adds modifier dice to a regular roll total", () => {
+    expect(
+      getRollTotal({
+        results: [
+          { dieId: "d6", value: "4" },
+          { dieId: "plot", value: "Complication +2" },
+        ],
+        modifier: 1,
+        modifierDice: [
+          { dieId: "d4", value: "3" },
+          { dieId: "plot", value: "Complication +4" },
+        ],
+      }),
+    ).toBe(14);
+    expect(
+      getModifierDiceValue([
+        { dieId: "d4", value: "3" },
+        { dieId: "plot", value: "Complication +4" },
+      ]),
+    ).toBe(7);
+  });
 });
 
 describe("getPlotDieBonus", () => {
@@ -358,6 +384,18 @@ describe("getRollOutcomeCounts", () => {
         { dieId: "d6", value: "20" },
       ]),
     ).toEqual({ opportunities: 2, complications: 3 });
+  });
+
+  it("includes modifier dice in shared result lists", () => {
+    expect(
+      getAllRollResults({
+        results: [{ dieId: "d20", value: "20" }],
+        modifierDice: [{ dieId: "plot", value: "Opportunity" }],
+      }),
+    ).toEqual([
+      { dieId: "d20", value: "20" },
+      { dieId: "plot", value: "Opportunity" },
+    ]);
   });
 });
 
@@ -404,6 +442,25 @@ describe("getPlotweaverBreakdown", () => {
       hit: 2,
       graze: 4,
       total: 17,
+    });
+  });
+
+  it("applies modifier dice to d20 + Plot and Hit, but not Graze", () => {
+    expect(
+      getPlotweaverBreakdown({
+        results: [
+          { dieId: "d20", value: "15" },
+          { dieId: "plot", value: "Complication +2" },
+          { dieId: "d6", value: "4" },
+        ],
+        modifier: 2,
+        modifierDice: [{ dieId: "d4", value: "3" }],
+      }),
+    ).toMatchObject({
+      d20AndPlot: 22,
+      hit: 9,
+      graze: 4,
+      total: 31,
     });
   });
 

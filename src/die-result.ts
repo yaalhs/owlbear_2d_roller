@@ -48,6 +48,14 @@ export function createRollOutcomeSummary(
   return summary;
 }
 
+export function createModifierDieMarker(): HTMLSpanElement {
+  const marker = document.createElement("span");
+  marker.className = "modifier-die-marker";
+  marker.textContent = "Mod";
+  marker.setAttribute("aria-label", "Modifier die");
+  return marker;
+}
+
 function appendOutcomeCount(
   summary: HTMLDivElement,
   glyph: "C" | "O",

@@ -234,9 +234,11 @@ h2 {
 
 .modifier {
   display: flex;
+  flex-wrap: wrap;
   min-height: 38px;
   align-items: center;
   justify-content: space-between;
+  gap: 7px;
   margin-top: 9px;
   padding: 0 4px;
 }
@@ -254,6 +256,102 @@ h2 {
 
 .modifier-controls[hidden] {
   display: none;
+}
+
+.modifier-controls {
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.modifier-dice-controls {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  justify-items: center;
+  gap: 5px;
+  padding-top: 5px;
+}
+
+.modifier-dice-label {
+  grid-column: 1 / -1;
+  justify-self: start;
+  color: #c9c2da;
+  font-size: 10px;
+}
+
+.modifier-die-option {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.modifier-die-button {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  padding: 2px;
+  border: 1px solid #464550;
+  border-radius: 6px;
+  background: #292a33;
+  cursor: pointer;
+}
+
+.modifier-die-button:hover:not(:disabled),
+.modifier-die-button:focus-visible {
+  border-color: #a18aff;
+  background: #302c40;
+}
+
+.modifier-die-button:focus-visible {
+  outline: 2px solid #b5a4ff;
+  outline-offset: 1px;
+}
+
+.modifier-die-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.modifier-die-graphic .die-result {
+  font-size: 11px;
+}
+
+.modifier-die-graphic .die-result-complication {
+  font-size: 7px;
+}
+
+.modifier-die-count {
+  position: absolute;
+  z-index: 4;
+  right: -3px;
+  bottom: -3px;
+  min-width: 15px;
+  padding: 1px 3px;
+  border: 1px solid #ded4ff;
+  border-radius: 8px;
+  background: #34275a;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.modifier-die-remove {
+  width: 19px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #464550;
+  border-radius: 5px;
+  background: #1d1e25;
+  color: #c9c2da;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.modifier-die-remove:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .roll-mode {

@@ -3,9 +3,14 @@ import {
   findDie,
   getDieShapeArt,
 } from "./catalog";
-import { createDieResult, createRollOutcomeSummary } from "./die-result";
+import {
+  createDieResult,
+  createModifierDieMarker,
+  createRollOutcomeSummary,
+} from "./die-result";
 import {
   getPlotDieBonus,
+  getAllRollResults,
   formatPlotweaverBreakdown,
   formatRollSubtitle,
   getRollOutcomeCounts,
@@ -39,8 +44,9 @@ if (!roll) {
   root.tabIndex = 0;
   root.setAttribute("aria-label", "Open shared roll history");
   root.title = "Click to open shared roll history";
-  const rollSubtitle = formatRollSubtitle(roll.results);
-  const visibleDieCount = getVisibleDieCount(roll.results);
+  const allResults = getAllRollResults(roll);
+  const rollSubtitle = formatRollSubtitle(allResults);
+  const visibleDieCount = getVisibleDieCount(allResults);
   const popupTitle = `Roll · ${visibleDieCount} ${visibleDieCount === 1 ? "die" : "dice"}`;
   document.title = "Dice roll";
   root.setAttribute("aria-label", `${popupTitle}: ${rollSubtitle}. Click to open shared roll history.`);
@@ -125,7 +131,13 @@ if (!roll) {
       );
     }
   }
-  const faceCount = getVisibleDieCount(roll.results);
+  for (const result of roll.modifierDice ?? []) {
+    const tile = createToastFaceTile(result.dieId, result.value);
+    tile.title = `Modifier ${findDie(result.dieId)?.name ?? result.dieId}: ${result.value}`;
+    tile.append(createModifierDieMarker());
+    faces.append(tile);
+  }
+  const faceCount = getVisibleDieCount(allResults);
   faces.dataset.rows = String(Math.min(3, Math.max(1, Math.ceil(faceCount / 5))));
   faces.dataset.compact = String(faceCount > 15);
 
@@ -136,9 +148,9 @@ if (!roll) {
   total.textContent = plotweaverSummary
     ? plotweaverSummary
     : roll.modifier
-      ? `Total ${getRollTotal(roll)} (${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
+      ? `Total ${getRollTotal(roll)} (${sumNumericResults(allResults) + getPlotDieBonus(allResults)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
       : `Total ${getRollTotal(roll)}`;
-  const outcomes = getRollOutcomeCounts(roll.results);
+  const outcomes = getRollOutcomeCounts(allResults);
   root.append(
     heading,
     subtitle,

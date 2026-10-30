@@ -9,6 +9,8 @@ import {
 import type { DieDefinition, DieFace } from "./catalog";
 import {
   getPlotDieBonus,
+  getAllRollResults,
+  getModifierDiceValue,
   getRollOutcomeCounts,
   getRollTotal,
   formatPlotweaverBreakdown,
@@ -26,7 +28,11 @@ import type {
   AdvantageTarget,
   SharedRoll,
 } from "./rolls";
-import { createDieResult, createRollOutcomeSummary } from "./die-result";
+import {
+  createDieResult,
+  createModifierDieMarker,
+  createRollOutcomeSummary,
+} from "./die-result";
 import "./font.css";
 import "./die-graphic.css";
 import "./style.css";
@@ -45,10 +51,12 @@ const modifierControls = requiredElement<HTMLDivElement>("modifier-controls");
 const modifierValueOutput = requiredElement<HTMLOutputElement>("modifier-value");
 const modifierMinus = requiredElement<HTMLButtonElement>("modifier-minus");
 const modifierPlus = requiredElement<HTMLButtonElement>("modifier-plus");
+const modifierDiceControls = requiredElement<HTMLDivElement>("modifier-dice-controls");
 const plotweaverModeButton = requiredElement<HTMLButtonElement>("plotweaver-mode");
 const regularModeButton = requiredElement<HTMLButtonElement>("regular-mode");
 const saveRollButton = requiredElement<HTMLButtonElement>("save-roll-button");
 const quantitySelections = new Map<string, number>();
+const modifierDiceSelections = new Map<string, number>();
 let advantageSelections: AdvantageSettings = {};
 
 let roomReady = false;
@@ -65,6 +73,14 @@ function requiredElement<T extends HTMLElement>(id: string): T {
     throw new Error(`Required page element "#${id}" was not found.`);
   }
   return element as T;
+}
+
+function selectedModifierDiceQuantities(): Record<string, number> {
+  const quantities: Record<string, number> = {};
+  for (const [id, quantity] of modifierDiceSelections) {
+    quantities[id] = quantity;
+  }
+  return quantities;
 }
 
 function buildDiceControls(): void {
@@ -113,10 +129,7 @@ function buildDiceControls(): void {
 
     const changeQuantity = (amount: number) => {
       const current = quantitySelections.get(die.id) ?? 0;
-      const total = [...quantitySelections.values()].reduce(
-        (sum, quantity) => sum + quantity,
-        0,
-      );
+      const total = selectedDiceCount();
       if (amount > 0 && (current >= MAX_DICE_PER_TYPE || total >= MAX_DICE_PER_ROLL)) return;
       quantitySelections.set(die.id, Math.max(0, current + amount));
       const nextQuantity = quantitySelections.get(die.id) ?? 0;
@@ -159,6 +172,93 @@ function buildDiceControls(): void {
     }
     diceList.append(row);
     quantitySelections.set(die.id, 0);
+    modifierDiceSelections.set(die.id, 0);
+    const modifierDieButton = document.createElement("button");
+    modifierDieButton.className = "modifier-die-button";
+    modifierDieButton.type = "button";
+    modifierDieButton.setAttribute("aria-label", `Add one ${die.name} modifier die`);
+    const modifierDieGraphic = createDieGraphic(die, maximumFace.value);
+    modifierDieGraphic.classList.add("modifier-die-graphic");
+    modifierDieGraphic.setAttribute("aria-hidden", "true");
+    const modifierDieCount = document.createElement("output");
+    modifierDieCount.className = "modifier-die-count";
+    modifierDieCount.dataset.modifierDieCount = die.id;
+    modifierDieCount.textContent = "0";
+    modifierDieCount.setAttribute("aria-label", `0 ${die.name} modifier dice selected`);
+    modifierDieButton.append(modifierDieGraphic, modifierDieCount);
+    modifierDieButton.addEventListener("click", () => {
+      const currentCount = modifierDiceSelections.get(die.id) ?? 0;
+      if (currentCount >= MAX_DICE_PER_TYPE || selectedDiceCount() >= MAX_DICE_PER_ROLL) {
+        return;
+      }
+      modifierDiceSelections.set(die.id, currentCount + 1);
+      updateModifierDiceControls();
+      updateRollButton();
+    });
+
+    const removeModifierDie = document.createElement("button");
+    removeModifierDie.className = "modifier-die-remove";
+    removeModifierDie.type = "button";
+    removeModifierDie.textContent = "−";
+    removeModifierDie.setAttribute("aria-label", `Remove one ${die.name} modifier die`);
+    removeModifierDie.dataset.modifierDieRemove = die.id;
+    removeModifierDie.addEventListener("click", () => {
+      const currentCount = modifierDiceSelections.get(die.id) ?? 0;
+      if (currentCount === 0) return;
+      modifierDiceSelections.set(die.id, currentCount - 1);
+      updateModifierDiceControls();
+      updateRollButton();
+    });
+    const modifierDieOption = document.createElement("div");
+    modifierDieOption.className = "modifier-die-option";
+    modifierDieOption.append(modifierDieButton, removeModifierDie);
+    modifierDiceControls.append(modifierDieOption);
+  }
+  updateModifierDiceControls();
+}
+
+function selectedDiceCount(): number {
+  const selectedDice = [...quantitySelections.values()].reduce(
+    (total, count) => total + count,
+    0,
+  );
+  const selectedModifierDice = modifierEnabled
+    ? [...modifierDiceSelections.values()].reduce(
+        (total, count) => total + count,
+        0,
+      )
+    : 0;
+  return selectedDice + selectedModifierDice;
+}
+
+function updateModifierDiceControls(): void {
+  for (const button of modifierDiceControls.querySelectorAll<HTMLButtonElement>(
+    ".modifier-die-button",
+  )) {
+    const countOutput = button.querySelector<HTMLOutputElement>(
+      "[data-modifier-die-count]",
+    );
+    const dieId = countOutput?.dataset.modifierDieCount;
+    if (!dieId) continue;
+    const count = modifierDiceSelections.get(dieId) ?? 0;
+    if (countOutput) {
+      countOutput.textContent = String(count);
+      countOutput.setAttribute(
+        "aria-label",
+        `${count} ${findDie(dieId)?.name ?? dieId} modifier dice selected`,
+      );
+    }
+    button.setAttribute(
+      "aria-label",
+      `Add one ${findDie(dieId)?.name ?? dieId} modifier die (${count} selected)`,
+    );
+    button.disabled =
+      count >= MAX_DICE_PER_TYPE || selectedDiceCount() >= MAX_DICE_PER_ROLL;
+    const remove =
+      button.parentElement?.querySelector<HTMLButtonElement>(
+        ".modifier-die-remove",
+      );
+    if (remove) remove.disabled = count === 0;
   }
 }
 
@@ -306,11 +406,8 @@ function selectedQuantities(): Record<string, number> {
 }
 
 function updateRollButton(): void {
-  const hasDice = [...quantitySelections.values()].some((quantity) => quantity > 0);
-  const total = [...quantitySelections.values()].reduce(
-    (sum, quantity) => sum + quantity,
-    0,
-  );
+  const hasDice = selectedDiceCount() > 0;
+  const total = selectedDiceCount();
   rollButton.disabled = !roomReady || !hasDice;
   for (const row of diceList.querySelectorAll<HTMLElement>("[data-die-id]")) {
     const id = row.dataset.dieId;
@@ -319,6 +416,7 @@ function updateRollButton(): void {
     if (plus) plus.disabled = count >= MAX_DICE_PER_TYPE || total >= MAX_DICE_PER_ROLL;
   }
   updateAdvantageControls();
+  updateModifierDiceControls();
   showError("");
 }
 
@@ -346,7 +444,8 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
     const header = document.createElement("div");
     header.className = "roll-entry-header";
     const title = document.createElement("strong");
-    const visibleDieCount = getVisibleDieCount(roll.results);
+    const allResults = getAllRollResults(roll);
+    const visibleDieCount = getVisibleDieCount(allResults);
     title.textContent = `Roll · ${visibleDieCount} ${visibleDieCount === 1 ? "die" : "dice"}`;
     const time = document.createElement("time");
     time.dateTime = roll.timestamp;
@@ -399,11 +498,19 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
         );
       }
     }
+    for (const result of roll.modifierDice ?? []) {
+      const die = findDie(result.dieId);
+      const face = die?.faces.find((candidate) => candidate.value === result.value);
+      const tile = createFaceTile(die, face, result.value);
+      tile.title = `Modifier ${die?.name ?? result.dieId}: ${result.value}`;
+      tile.append(createModifierDieMarker());
+      resultGrid.append(tile);
+    }
 
     const footer = document.createElement("div");
     footer.className = "roll-total";
     footer.textContent = formatRollTotal(roll);
-    const outcomes = getRollOutcomeCounts(roll.results);
+    const outcomes = getRollOutcomeCounts(allResults);
     item.append(
       header,
       resultGrid,
@@ -420,7 +527,7 @@ function formatRollTotal(roll: SharedRoll): string {
     if (plotweaverSummary) return `Plotweaver · ${plotweaverSummary}`;
   }
   const modifierText = roll.modifier
-    ? ` (dice ${sumNumericResults(roll.results) + getPlotDieBonus(roll.results)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
+    ? ` (dice ${sumNumericResults(roll.results) + getPlotDieBonus(roll.results) + getModifierDiceValue(roll.modifierDice)} ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)})`
     : "";
   return `Total: ${getRollTotal(roll)}${modifierText}`;
 }
@@ -510,6 +617,10 @@ function clearRollSelection(): void {
     if (count) count.textContent = "0";
   }
   setModifier(0);
+  for (const dieId of modifierDiceSelections.keys()) {
+    modifierDiceSelections.set(dieId, 0);
+  }
+  updateModifierDiceControls();
   advantageSelections = {};
   updateAdvantageControls();
 }
@@ -525,12 +636,17 @@ async function rollSelectedDice(): Promise<void> {
       Math.random,
       selectedAdvantages,
     );
-    if (results.length === 0) return;
+    const modifierDice = rollDice(
+      DICE_CATALOG,
+      modifierEnabled ? selectedModifierDiceQuantities() : {},
+    );
+    if (results.length === 0 && modifierDice.length === 0) return;
 
     const roll: SharedRoll = {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       results,
+      ...(modifierDice.length > 0 ? { modifierDice } : {}),
       mode: rollMode,
       ...(modifierEnabled && modifier !== 0 ? { modifier } : {}),
       ...(Object.keys(selectedAdvantages).length > 0
@@ -574,6 +690,7 @@ modifierToggle.addEventListener("click", () => {
   modifierControls.hidden = !modifierEnabled;
   modifierToggle.setAttribute("aria-expanded", String(modifierEnabled));
   modifierToggle.textContent = modifierEnabled ? "Modifier" : "Add modifier";
+  updateRollButton();
 });
 modifierMinus.addEventListener("click", () => setModifier(modifier - 1));
 modifierPlus.addEventListener("click", () => setModifier(modifier + 1));

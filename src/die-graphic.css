@@ -58,6 +58,20 @@
   line-height: 1;
 }
 
+.modifier-die-marker {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  right: 0;
+  padding: 1px 2px;
+  border-radius: 0 3px 0 4px;
+  background: #4a3b70;
+  color: #fff;
+  font-size: 6px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
 .plot-dingbat {
   font-family: "Cosmere Dingbats", sans-serif;
   font-size: 17px;

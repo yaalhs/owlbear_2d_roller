@@ -1,5 +1,6 @@
 import OBR from "@owlbear-rodeo/sdk";
 import {
+  getAllRollResults,
   formatRollSubtitle,
   getVisibleDieCount,
   parseSharedRolls,
@@ -30,8 +31,9 @@ async function showRollToast(roll: SharedRoll): Promise<void> {
   const viewportWidth = await OBR.viewport.getWidth();
   const viewportHeight = await OBR.viewport.getHeight();
   const id = `${TOAST_ID_PREFIX}/${roll.id}`;
-  const faceCount = getVisibleDieCount(roll.results);
-  const height = getToastHeight(formatRollSubtitle(roll.results), faceCount);
+  const allResults = getAllRollResults(roll);
+  const faceCount = getVisibleDieCount(allResults);
+  const height = getToastHeight(formatRollSubtitle(allResults), faceCount);
   const toastUrl = new URL("./roll-toast.html", window.location.href);
   toastUrl.searchParams.set("roll", JSON.stringify(roll));
   toastUrl.searchParams.set("toastId", id);

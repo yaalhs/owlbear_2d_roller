@@ -19,6 +19,7 @@ export interface SharedRoll {
   readonly id: string;
   readonly timestamp: string;
   readonly results: readonly RolledDie[];
+  readonly modifierDice?: readonly RolledDie[];
   readonly modifier?: number;
   readonly mode?: RollMode;
   readonly advantage?: AdvantageSettings;
@@ -137,6 +138,18 @@ export function getRollOutcomeCounts(
   );
 }
 
+export function getAllRollResults(
+  roll: Pick<SharedRoll, "results" | "modifierDice">,
+): RolledDie[] {
+  return [...roll.results, ...(roll.modifierDice ?? [])];
+}
+
+export function getModifierDiceValue(
+  modifierDice: readonly RolledDie[] = [],
+): number {
+  return sumNumericResults(modifierDice) + getPlotDieBonus(modifierDice);
+}
+
 export function sumNumericResults(results: readonly RolledDie[]): number {
   return results.reduce((sum, result) => {
     const value = Number(result.value);
@@ -162,11 +175,12 @@ export function getPlotDieBonus(results: readonly RolledDie[]): number {
 }
 
 export function getRollTotal(
-  roll: Pick<SharedRoll, "results" | "modifier">,
+  roll: Pick<SharedRoll, "results" | "modifier" | "modifierDice">,
 ): number {
   return (
     sumNumericResults(roll.results) +
     getPlotDieBonus(roll.results) +
+    getModifierDiceValue(roll.modifierDice) +
     (roll.modifier ?? 0)
   );
 }
@@ -182,13 +196,13 @@ export interface PlotweaverBreakdown {
 }
 
 export function getPlotweaverBreakdown(
-  roll: Pick<SharedRoll, "results" | "modifier">,
+  roll: Pick<SharedRoll, "results" | "modifier" | "modifierDice">,
 ): PlotweaverBreakdown {
   const d20Results = roll.results.filter((result) => result.dieId === "d20");
   const otherResults = roll.results.filter(
     (result) => result.dieId !== "d20" && result.dieId !== "plot",
   );
-  const modifier = roll.modifier ?? 0;
+  const modifier = (roll.modifier ?? 0) + getModifierDiceValue(roll.modifierDice);
   const d20AndPlot =
     sumNumericResults(d20Results) +
     getPlotDieBonus(roll.results) +
@@ -210,7 +224,7 @@ export function getPlotweaverBreakdown(
 }
 
 export function formatPlotweaverBreakdown(
-  roll: Pick<SharedRoll, "results" | "modifier">,
+  roll: Pick<SharedRoll, "results" | "modifier" | "modifierDice">,
 ): string | undefined {
   const breakdown = getPlotweaverBreakdown(roll);
   if (!breakdown.hasD20) return undefined;
@@ -376,6 +390,8 @@ export function parseSharedRolls(value: unknown): SharedRoll[] {
       typeof candidate.id !== "string" ||
       typeof candidate.timestamp !== "string" ||
       !Array.isArray(candidate.results) ||
+      (candidate.modifierDice !== undefined &&
+        !Array.isArray(candidate.modifierDice)) ||
       (candidate.modifier !== undefined && !Number.isInteger(candidate.modifier)) ||
       (candidate.mode !== undefined &&
         candidate.mode !== "plotweaver" &&
@@ -386,7 +402,7 @@ export function parseSharedRolls(value: unknown): SharedRoll[] {
       return false;
     }
 
-    return candidate.results.every((result: unknown) => {
+    const isValidResult = (result: unknown): result is RolledDie => {
       if (typeof result !== "object" || result === null) return false;
       const rolledDie = result as Record<string, unknown>;
       return (
@@ -400,7 +416,12 @@ export function parseSharedRolls(value: unknown): SharedRoll[] {
               (value) => typeof value === "string",
             )))
       );
-    });
+    };
+    return (
+      candidate.results.every(isValidResult) &&
+      (candidate.modifierDice === undefined ||
+        candidate.modifierDice.every(isValidResult))
+    );
   });
 }
 
