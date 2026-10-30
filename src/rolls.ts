@@ -25,7 +25,18 @@ export interface SharedRoll {
   readonly advantage?: AdvantageSettings;
 }
 
-export type RollMode = "plotweaver" | "regular";
+export type FitdOutcomeName =
+  | "Bad outcome"
+  | "Partial success"
+  | "Full success"
+  | "Critical success";
+
+export interface FitdOutcome {
+  readonly name: FitdOutcomeName;
+  readonly highestValue: string;
+}
+
+export type RollMode = "plotweaver" | "fitd" | "regular";
 export type AdvantageTarget = "d20" | "plot";
 export type AdvantageMode = "advantage" | "disadvantage";
 export interface DiceAdvantageSelection {
@@ -236,6 +247,79 @@ export function formatPlotweaverBreakdown(
   return components.join(" · ");
 }
 
+export function getFitdOutcome(
+  dieId: string,
+  results: readonly RolledDie[],
+): FitdOutcome | undefined {
+  const die = findDie(dieId);
+  if (!die || die.id === "plot" || results.length === 0) return undefined;
+  if (results.some((result) => result.dieId !== dieId)) {
+    throw new RangeError("A Forged in the Dark roll must use a single die type.");
+  }
+
+  const faceRank = (value: string): number =>
+    die.faces.findIndex((face) => face.value === value);
+  const highestRank = die.faces.length - 1;
+  const ranks = results.map((result) => faceRank(result.value));
+  if (ranks.some((rank) => rank < 0)) {
+    throw new RangeError(`A Forged in the Dark roll contains an unknown ${die.name} face.`);
+  }
+
+  const highestRolledRank = Math.max(...ranks);
+  const highestValue =
+    results.find((result) => faceRank(result.value) === highestRolledRank)?.value ??
+    "";
+  const highestCount = ranks.filter((rank) => rank === highestRank).length;
+  const partialSuccessRank = Math.ceil((die.faces.length * 2) / 3) - 1;
+
+  if (highestCount >= 2) {
+    return { name: "Critical success", highestValue };
+  }
+  if (highestRolledRank === highestRank) {
+    return { name: "Full success", highestValue };
+  }
+  if (highestRolledRank >= partialSuccessRank) {
+    return { name: "Partial success", highestValue };
+  }
+  return { name: "Bad outcome", highestValue };
+}
+
+export function rollFitdPool(
+  dieId: string,
+  quantity: number,
+  random: () => number = Math.random,
+): RolledDie[] {
+  const die = findDie(dieId);
+  if (!die || die.id === "plot") {
+    throw new RangeError("Forged in the Dark rolls require a non-Plot die.");
+  }
+  if (!Number.isInteger(quantity) || quantity < 0 || quantity > MAX_DICE_PER_ROLL) {
+    throw new RangeError(
+      `Forged in the Dark dice count must be from 0 to ${MAX_DICE_PER_ROLL}.`,
+    );
+  }
+  if (quantity > MAX_DICE_PER_TYPE) {
+    throw new RangeError(
+      `Forged in the Dark dice count cannot exceed ${MAX_DICE_PER_TYPE} for one die type.`,
+    );
+  }
+  if (quantity > 0) {
+    return rollDice([die], { [dieId]: quantity }, random);
+  }
+
+  const candidates = rollDice([die], { [dieId]: 2 }, random);
+  const faceRank = (value: string) =>
+    die.faces.findIndex((face) => face.value === value);
+  candidates.sort((left, right) => faceRank(left.value) - faceRank(right.value));
+  const [kept, discarded] = candidates;
+  if (!kept || !discarded) {
+    throw new Error("A zero-dice roll must generate two results.");
+  }
+  return [
+    { dieId, value: kept.value, unselectedValue: discarded.value },
+  ];
+}
+
 export function rollDice(
   dice: readonly DieDefinition[],
   quantities: Readonly<Record<string, number>>,
@@ -395,6 +479,7 @@ export function parseSharedRolls(value: unknown): SharedRoll[] {
       (candidate.modifier !== undefined && !Number.isInteger(candidate.modifier)) ||
       (candidate.mode !== undefined &&
         candidate.mode !== "plotweaver" &&
+        candidate.mode !== "fitd" &&
         candidate.mode !== "regular") ||
       (candidate.advantage !== undefined &&
         !isAdvantageSettings(candidate.advantage))
@@ -417,11 +502,42 @@ export function parseSharedRolls(value: unknown): SharedRoll[] {
             )))
       );
     };
-    return (
-      candidate.results.every(isValidResult) &&
-      (candidate.modifierDice === undefined ||
-        candidate.modifierDice.every(isValidResult))
-    );
+    if (
+      !candidate.results.every(isValidResult) ||
+      (candidate.modifierDice !== undefined &&
+        !candidate.modifierDice.every(isValidResult))
+    ) {
+      return false;
+    }
+    if (candidate.mode === "fitd") {
+      const dieIds = new Set(
+        candidate.results.map((result) => (result as RolledDie).dieId),
+      );
+      const dieId = dieIds.values().next().value as string | undefined;
+      const die = dieId ? findDie(dieId) : undefined;
+      return (
+        candidate.results.length > 0 &&
+        dieIds.size === 1 &&
+        die !== undefined &&
+        die.id !== "plot" &&
+        candidate.results.every((result) => {
+          const rolledDie = result as RolledDie;
+          return (
+            die.faces.some((face) => face.value === rolledDie.value) &&
+            (rolledDie.unselectedValue === undefined ||
+              die.faces.some((face) => face.value === rolledDie.unselectedValue)) &&
+            (rolledDie.unselectedValues === undefined ||
+              rolledDie.unselectedValues.every((value) =>
+                die.faces.some((face) => face.value === value),
+              ))
+          );
+        }) &&
+        candidate.modifierDice === undefined &&
+        candidate.modifier === undefined &&
+        candidate.advantage === undefined
+      );
+    }
+    return true;
   });
 }
 

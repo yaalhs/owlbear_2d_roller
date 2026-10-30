@@ -1,5 +1,6 @@
 import {
   getModifierDiceValue,
+  getFitdOutcome,
   getPlotDieBonus,
   getPlotweaverBreakdown,
   getRollTotal,
@@ -12,6 +13,18 @@ export function appendRollSummary(
   roll: SharedRoll,
   options: { readonly showPlotweaverLabel?: boolean; readonly totalColon?: boolean } = {},
 ): void {
+  if (roll.mode === "fitd") {
+    const outcome = getFitdOutcome(roll.results[0]?.dieId ?? "", roll.results);
+    if (outcome) {
+      target.append(document.createTextNode("Forged in the Dark · "));
+      appendCalculatedValue(
+        target,
+        `${outcome.name} · ${outcome.highestValue}`,
+      );
+    }
+    return;
+  }
+
   const breakdown =
     roll.mode === "plotweaver" ? getPlotweaverBreakdown(roll) : undefined;
   if (breakdown?.hasD20) {
@@ -44,7 +57,7 @@ export function appendRollSummary(
   }
 }
 
-function appendCalculatedValue(target: HTMLElement, value: number): void {
+function appendCalculatedValue(target: HTMLElement, value: number | string): void {
   const result = document.createElement("span");
   result.className = "calculated-result";
   result.textContent = String(value);

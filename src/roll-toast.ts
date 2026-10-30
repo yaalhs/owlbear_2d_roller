@@ -141,14 +141,14 @@ if (!roll) {
   const total = document.createElement("span");
   total.className = "toast-total";
   appendRollSummary(total, roll);
-  const outcomes = getRollOutcomeCounts(allResults);
-  root.append(
-    heading,
-    subtitle,
-    faces,
-    createRollOutcomeSummary(outcomes.opportunities, outcomes.complications),
-    total,
-  );
+  root.append(heading, subtitle, faces);
+  if (roll.mode !== "fitd") {
+    const outcomes = getRollOutcomeCounts(allResults);
+    root.append(
+      createRollOutcomeSummary(outcomes.opportunities, outcomes.complications),
+    );
+  }
+  root.append(total);
 }
 
 function createToastFaceTile(

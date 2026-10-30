@@ -13,6 +13,7 @@ import {
   getVisibleDieCount,
   parseSharedRolls,
   rollDice,
+  rollFitdPool,
   ROLL_BROADCAST_CHANNEL,
   setDiceAdvantageSelection,
   toggleAdvantageSelection,
@@ -49,7 +50,13 @@ const modifierMinus = requiredElement<HTMLButtonElement>("modifier-minus");
 const modifierPlus = requiredElement<HTMLButtonElement>("modifier-plus");
 const modifierDiceControls = requiredElement<HTMLDivElement>("modifier-dice-controls");
 const plotweaverModeButton = requiredElement<HTMLButtonElement>("plotweaver-mode");
-const regularModeButton = requiredElement<HTMLButtonElement>("regular-mode");
+const fitdModeButton = requiredElement<HTMLButtonElement>("fitd-mode");
+const fitdControls = requiredElement<HTMLDivElement>("fitd-controls");
+const fitdDieOptions = requiredElement<HTMLDivElement>("fitd-die-options");
+const fitdCountOutput = requiredElement<HTMLOutputElement>("fitd-count");
+const fitdMinus = requiredElement<HTMLButtonElement>("fitd-minus");
+const fitdPlus = requiredElement<HTMLButtonElement>("fitd-plus");
+const modifierSection = requiredElement<HTMLDivElement>("modifier-section");
 const saveRollButton = requiredElement<HTMLButtonElement>("save-roll-button");
 const quantitySelections = new Map<string, number>();
 const modifierDiceSelections = new Map<string, number>();
@@ -60,7 +67,9 @@ let previewMode = new URLSearchParams(window.location.search).has("preview");
 let visibleRolls: SharedRoll[] = [];
 let modifier = 0;
 let modifierEnabled = false;
-let rollMode: "plotweaver" | "regular" = "plotweaver";
+let rollMode: "plotweaver" | "fitd" = "plotweaver";
+let fitdDieId = "d6";
+let fitdQuantity = 1;
 let keepSelection = false;
 
 function requiredElement<T extends HTMLElement>(id: string): T {
@@ -230,6 +239,7 @@ function buildDiceControls(): void {
 }
 
 function selectedDiceCount(): number {
+  if (rollMode === "fitd") return fitdQuantity;
   const selectedDice = [...quantitySelections.values()].reduce(
     (total, count) => total + count,
     0,
@@ -241,6 +251,41 @@ function selectedDiceCount(): number {
       )
     : 0;
   return selectedDice + selectedModifierDice;
+}
+
+function buildFitdControls(): void {
+  for (const die of DICE_CATALOG.filter((candidate) => candidate.id !== "plot")) {
+    const maximumFace = die.faces[die.faces.length - 1];
+    const button = document.createElement("button");
+    button.className = "modifier-die-button fitd-die-button";
+    button.type = "button";
+    button.dataset.fitdDieId = die.id;
+    button.setAttribute("aria-label", `Use ${die.name} dice`);
+    const graphic = createDieGraphic(die, maximumFace.value);
+    graphic.classList.add("modifier-die-graphic");
+    graphic.setAttribute("aria-hidden", "true");
+    button.append(graphic);
+    button.addEventListener("click", () => {
+      fitdDieId = die.id;
+      updateFitdControls();
+      updateRollButton();
+    });
+    fitdDieOptions.append(button);
+  }
+  updateFitdControls();
+}
+
+function updateFitdControls(): void {
+  fitdCountOutput.textContent = String(fitdQuantity);
+  fitdMinus.disabled = fitdQuantity <= 0;
+  fitdPlus.disabled = fitdQuantity >= MAX_DICE_PER_ROLL;
+  for (const button of fitdDieOptions.querySelectorAll<HTMLButtonElement>(
+    "[data-fitd-die-id]",
+  )) {
+    const selected = button.dataset.fitdDieId === fitdDieId;
+    button.setAttribute("aria-pressed", String(selected));
+    button.classList.toggle("fitd-die-selected", selected);
+  }
 }
 
 function updateModifierDiceControls(): void {
@@ -418,9 +463,12 @@ function selectedQuantities(): Record<string, number> {
 }
 
 function updateRollButton(): void {
-  const hasDice = selectedDiceCount() > 0;
+  const hasDice = rollMode === "fitd" || selectedDiceCount() > 0;
   const total = selectedDiceCount();
   rollButton.disabled = !roomReady || !hasDice;
+  diceList.hidden = rollMode === "fitd";
+  modifierSection.hidden = rollMode === "fitd";
+  fitdControls.hidden = rollMode !== "fitd";
   for (const row of diceList.querySelectorAll<HTMLElement>("[data-die-id]")) {
     const id = row.dataset.dieId;
     const count = id ? quantitySelections.get(id) ?? 0 : 0;
@@ -531,9 +579,14 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
     item.append(
       header,
       resultGrid,
-      createRollOutcomeSummary(outcomes.opportunities, outcomes.complications),
       footer,
     );
+    if (roll.mode !== "fitd") {
+      item.insertBefore(
+        createRollOutcomeSummary(outcomes.opportunities, outcomes.complications),
+        footer,
+      );
+    }
     historyList.append(item);
   }
 }
@@ -631,6 +684,8 @@ function clearRollSelection(): void {
   for (const dieId of modifierDiceSelections.keys()) {
     modifierDiceSelections.set(dieId, 0);
   }
+  fitdQuantity = 0;
+  updateFitdControls();
   updateModifierDiceControls();
   advantageSelections = {};
   updateAdvantageControls();
@@ -640,51 +695,35 @@ async function rollSelectedDice(): Promise<void> {
   showError("");
   rollButton.disabled = true;
   try {
-    const selectedAdvantages = selectedAdvantageSettings();
-    const results = rollDice(
-      DICE_CATALOG,
-      selectedQuantities(),
-      Math.random,
-      selectedAdvantages,
-    );
-    const modifierDice = rollDice(
-      DICE_CATALOG,
-      modifierEnabled ? selectedModifierDiceQuantities() : {},
-    );
-    if (results.length === 0 && modifierDice.length === 0) return;
-
-    const roll: SharedRoll = {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      results,
-      ...(modifierDice.length > 0 ? { modifierDice } : {}),
-      mode: rollMode,
-      ...(modifierEnabled && modifier !== 0 ? { modifier } : {}),
-      ...(Object.keys(selectedAdvantages).length > 0
-        ? { advantage: selectedAdvantages }
-        : {}),
-    };
-
-    if (previewMode) {
-      setRolls([roll, ...visibleRolls]);
+    let roll: SharedRoll;
+    if (rollMode === "fitd") {
+      roll = createFitdRoll();
     } else {
-      const metadata = await OBR.room.getMetadata();
-      const existing = parseSharedRolls(metadata[METADATA_KEY]);
-      await OBR.room.setMetadata({
-        [METADATA_KEY]: [roll, ...existing].slice(0, HISTORY_LIMIT),
-      });
-      try {
-        await OBR.broadcast.sendMessage(ROLL_BROADCAST_CHANNEL, roll, {
-          destination: "ALL",
-        });
-      } catch (error) {
-        throw new Error(
-          `Roll saved to shared history, but its pop-up could not be sent: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        );
-      }
+      const selectedAdvantages = selectedAdvantageSettings();
+      const results = rollDice(
+        DICE_CATALOG,
+        selectedQuantities(),
+        Math.random,
+        selectedAdvantages,
+      );
+      const modifierDice = rollDice(
+        DICE_CATALOG,
+        modifierEnabled ? selectedModifierDiceQuantities() : {},
+      );
+      if (results.length === 0 && modifierDice.length === 0) return;
+      roll = {
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        results,
+        ...(modifierDice.length > 0 ? { modifierDice } : {}),
+        mode: rollMode,
+        ...(modifierEnabled && modifier !== 0 ? { modifier } : {}),
+        ...(Object.keys(selectedAdvantages).length > 0
+          ? { advantage: selectedAdvantages }
+          : {}),
+      };
     }
+    await saveAndShareRoll(roll);
     if (!keepSelection) clearRollSelection();
   } catch (error) {
     showError(error instanceof Error ? error.message : "The roll could not be shared.");
@@ -693,7 +732,41 @@ async function rollSelectedDice(): Promise<void> {
   }
 }
 
+function createFitdRoll(): SharedRoll {
+  return {
+    id: crypto.randomUUID(),
+    timestamp: new Date().toISOString(),
+    results: rollFitdPool(fitdDieId, fitdQuantity),
+    mode: "fitd",
+  };
+}
+
+async function saveAndShareRoll(roll: SharedRoll): Promise<void> {
+  if (previewMode) {
+    setRolls([roll, ...visibleRolls]);
+    return;
+  }
+
+  const metadata = await OBR.room.getMetadata();
+  const existing = parseSharedRolls(metadata[METADATA_KEY]);
+  await OBR.room.setMetadata({
+    [METADATA_KEY]: [roll, ...existing].slice(0, HISTORY_LIMIT),
+  });
+  try {
+    await OBR.broadcast.sendMessage(ROLL_BROADCAST_CHANNEL, roll, {
+      destination: "ALL",
+    });
+  } catch (error) {
+    throw new Error(
+      `Roll saved to shared history, but its pop-up could not be sent: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
+}
+
 buildDiceControls();
+buildFitdControls();
 renderHistory([]);
 rollButton.addEventListener("click", () => void rollSelectedDice());
 modifierToggle.addEventListener("click", () => {
@@ -711,12 +784,24 @@ saveRollButton.addEventListener("click", () => {
   saveRollButton.textContent = keepSelection ? "Roll setup saved · keep after roll" : "Save roll setup";
 });
 plotweaverModeButton.addEventListener("click", () => setRollMode("plotweaver"));
-regularModeButton.addEventListener("click", () => setRollMode("regular"));
+fitdModeButton.addEventListener("click", () => setRollMode("fitd"));
+fitdMinus.addEventListener("click", () => {
+  fitdQuantity = Math.max(0, fitdQuantity - 1);
+  updateFitdControls();
+  updateRollButton();
+});
+fitdPlus.addEventListener("click", () => {
+  fitdQuantity = Math.min(MAX_DICE_PER_ROLL, fitdQuantity + 1);
+  updateFitdControls();
+  updateRollButton();
+});
 
-function setRollMode(mode: "plotweaver" | "regular"): void {
+function setRollMode(mode: "plotweaver" | "fitd"): void {
   rollMode = mode;
   plotweaverModeButton.setAttribute("aria-pressed", String(mode === "plotweaver"));
-  regularModeButton.setAttribute("aria-pressed", String(mode === "regular"));
+  fitdModeButton.setAttribute("aria-pressed", String(mode === "fitd"));
+  updateFitdControls();
+  updateRollButton();
 }
 
 if (previewMode) {

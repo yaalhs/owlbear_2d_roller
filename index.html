@@ -19,7 +19,17 @@
       <section class="roller" aria-labelledby="roll-heading">
         <h2 id="roll-heading">Build your roll</h2>
         <div id="dice-list" class="dice-list"></div>
-        <div class="modifier">
+        <div id="fitd-controls" class="fitd-controls" hidden>
+          <span class="fitd-label">Die type</span>
+          <div id="fitd-die-options" class="fitd-die-options" role="group" aria-label="Forged in the Dark die type"></div>
+          <span class="fitd-help">Choose one die type for this pool. A zero-die roll keeps the lower of two dice.</span>
+          <div class="fitd-quantity-controls" role="group" aria-label="Forged in the Dark dice count">
+            <button id="fitd-minus" class="fitd-quantity-button" type="button" aria-label="Remove one die">−</button>
+            <output id="fitd-count" class="fitd-count" aria-live="polite" aria-label="Dice in pool">1</output>
+            <button id="fitd-plus" class="fitd-quantity-button" type="button" aria-label="Add one die">+</button>
+          </div>
+        </div>
+        <div id="modifier-section" class="modifier">
           <button id="modifier-toggle" class="modifier-toggle" type="button" aria-expanded="false">
             Add modifier
           </button>
@@ -38,8 +48,8 @@
             <button id="plotweaver-mode" class="mode-button" type="button" aria-pressed="true">
               Plotweaver
             </button>
-            <button id="regular-mode" class="mode-button" type="button" aria-pressed="false">
-              Regular
+            <button id="fitd-mode" class="mode-button" type="button" aria-pressed="false">
+              Forged in the Dark
             </button>
           </div>
         </div>
@@ -48,7 +58,7 @@
           class="save-roll-button"
           type="button"
           aria-pressed="false"
-          title="Keep the selected dice and modifier after a successful roll"
+          title="Keep the current roll setup after a successful roll"
         >
           Save roll setup
         </button>

@@ -6,6 +6,8 @@ import {
 } from "./catalog";
 import {
   formatRollSubtitle,
+  getFitdOutcome,
+  rollFitdPool,
   formatPlotweaverBreakdown,
   getPlotDieBonus,
   getAllRollResults,
@@ -291,9 +293,30 @@ describe("parseSharedRolls", () => {
         results: [],
         advantage: { d6: "advantage" },
       },
+      {
+        id: "fitd-roll",
+        timestamp: "2026-01-01T00:00:00.000Z",
+        mode: "fitd",
+        results: [{ dieId: "d6", value: "6" }],
+      },
+      {
+        id: "invalid-fitd-mix",
+        timestamp: "2026-01-01T00:00:00.000Z",
+        mode: "fitd",
+        results: [
+          { dieId: "d6", value: "6" },
+          { dieId: "d8", value: "8" },
+        ],
+      },
+      {
+        id: "invalid-fitd-face",
+        timestamp: "2026-01-01T00:00:00.000Z",
+        mode: "fitd",
+        results: [{ dieId: "d6", value: "not-a-face" }],
+      },
     ]);
 
-    expect(rolls).toHaveLength(1);
+    expect(rolls).toHaveLength(2);
     expect(rolls[0].results[0]).toEqual({ dieId: "d6", value: "3" });
     expect(rolls[0].results[1]).toEqual({
       dieId: "d20",
@@ -307,6 +330,7 @@ describe("parseSharedRolls", () => {
       plot: "advantage",
       dice: { d6: { mode: "advantage", count: 2 } },
     });
+    expect(rolls[1].mode).toBe("fitd");
     expect(parseSharedRolls("not an array")).toEqual([]);
   });
 });
@@ -421,6 +445,7 @@ describe("getPlotweaverBreakdown", () => {
       hasD20: true,
       hasOtherDice: true,
     });
+
   });
 
   it("regular total includes all dice, modifier and Plot complications", () => {
@@ -497,6 +522,85 @@ describe("getPlotweaverBreakdown", () => {
         modifier: 3,
       }),
     ).toBe("d20 + Plot + modifier 20");
+  });
+});
+
+describe("getFitdOutcome", () => {
+  it("uses the Blades in the Dark d6 result ladder and critical rule", () => {
+    expect(getFitdOutcome("d6", [{ dieId: "d6", value: "2" }])).toEqual({
+      name: "Bad outcome",
+      highestValue: "2",
+    });
+    expect(getFitdOutcome("d6", [{ dieId: "d6", value: "3" }])?.name).toBe(
+      "Bad outcome",
+    );
+    expect(getFitdOutcome("d6", [{ dieId: "d6", value: "4" }])).toEqual({
+      name: "Partial success",
+      highestValue: "4",
+    });
+    expect(getFitdOutcome("d6", [{ dieId: "d6", value: "6" }])).toEqual({
+      name: "Full success",
+      highestValue: "6",
+    });
+    expect(
+      getFitdOutcome("d6", [
+        { dieId: "d6", value: "6" },
+        { dieId: "d6", value: "6" },
+      ]),
+    ).toEqual({ name: "Critical success", highestValue: "6" });
+  });
+
+  it("scales the partial success threshold for alternate die sizes", () => {
+    expect(getFitdOutcome("d4", [{ dieId: "d4", value: "2" }])?.name).toBe(
+      "Bad outcome",
+    );
+    expect(getFitdOutcome("d4", [{ dieId: "d4", value: "3" }])?.name).toBe(
+      "Partial success",
+    );
+    expect(getFitdOutcome("d8", [{ dieId: "d8", value: "6" }])?.name).toBe(
+      "Partial success",
+    );
+    expect(getFitdOutcome("d20", [{ dieId: "d20", value: "20" }])?.name).toBe(
+      "Full success",
+    );
+  });
+
+  it("does not allow Plot or mixed die types in a FitD result", () => {
+    expect(getFitdOutcome("plot", [{ dieId: "plot", value: "Blank" }])).toBe(
+      undefined,
+    );
+    expect(() =>
+      getFitdOutcome("d6", [
+        { dieId: "d6", value: "6" },
+        { dieId: "d8", value: "8" },
+      ]),
+    ).toThrow(RangeError);
+  });
+});
+
+describe("rollFitdPool", () => {
+  it("rolls the chosen single die type", () => {
+    expect(rollFitdPool("d8", 3, () => 0.99)).toEqual([
+      { dieId: "d8", value: "8" },
+      { dieId: "d8", value: "8" },
+      { dieId: "d8", value: "8" },
+    ]);
+  });
+
+  it("uses the lowest of two dice when the pool has zero dice", () => {
+    const samples = [0.99, 0.2];
+    let index = 0;
+    const results = rollFitdPool("d6", 0, () => samples[index++]);
+    expect(results).toEqual([
+      { dieId: "d6", value: "2", unselectedValue: "6" },
+    ]);
+    expect(getFitdOutcome("d6", results)?.name).toBe("Bad outcome");
+  });
+
+  it("rejects Plot, invalid counts, and counts above the cap", () => {
+    expect(() => rollFitdPool("plot", 1)).toThrow(RangeError);
+    expect(() => rollFitdPool("d6", -1)).toThrow(RangeError);
+    expect(() => rollFitdPool("d6", 21)).toThrow(RangeError);
   });
 });
 

@@ -92,6 +92,94 @@ h2 {
   gap: 6px;
 }
 
+.dice-list[hidden],
+.modifier[hidden],
+.fitd-controls[hidden] {
+  display: none;
+}
+
+.fitd-controls {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 8px 0 2px;
+}
+
+.fitd-label {
+  justify-self: start;
+  color: #c9c2da;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.fitd-help {
+  color: #a7a4b2;
+  font-size: 10px;
+}
+
+.fitd-die-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+}
+
+.fitd-die-button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: #1d1e25;
+}
+
+.fitd-die-button[aria-pressed="true"] {
+  border-color: #a18aff;
+  background: #3a3159;
+  box-shadow: 0 0 0 2px #7357d844;
+}
+
+.fitd-quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fitd-quantity-button {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid #62578a;
+  border-radius: 8px;
+  background: #302a43;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fitd-quantity-button:hover:not(:disabled) {
+  border-color: #b5a4ff;
+  background: #433765;
+}
+
+.fitd-quantity-button:focus-visible {
+  outline: 2px solid #b5a4ff;
+  outline-offset: 2px;
+}
+
+.fitd-quantity-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fitd-count {
+  min-width: 42px;
+  color: #f0eaff;
+  font-size: 24px;
+  font-weight: 750;
+  text-align: center;
+}
+
 .die-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
