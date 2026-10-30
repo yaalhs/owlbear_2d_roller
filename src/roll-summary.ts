@@ -16,7 +16,11 @@ export function appendRollSummary(
   if (roll.mode === "fitd") {
     const outcome = getFitdOutcome(roll.results[0]?.dieId ?? "", roll.results);
     if (outcome) {
-      target.append(document.createTextNode("Forged in the Dark · "));
+      target.append(
+        document.createTextNode(
+          `Forged in the Dark${roll.fitdCut ? ` · Cut ${roll.fitdCut}` : ""} · `,
+        ),
+      );
       appendCalculatedValue(
         target,
         `${outcome.name} · ${outcome.highestValue}`,

@@ -297,7 +297,10 @@ describe("parseSharedRolls", () => {
         id: "fitd-roll",
         timestamp: "2026-01-01T00:00:00.000Z",
         mode: "fitd",
-        results: [{ dieId: "d6", value: "6" }],
+        fitdCut: 1,
+        results: [
+          { dieId: "d6", value: "4", unselectedValues: ["6"] },
+        ],
       },
       {
         id: "invalid-fitd-mix",
@@ -331,6 +334,7 @@ describe("parseSharedRolls", () => {
       dice: { d6: { mode: "advantage", count: 2 } },
     });
     expect(rolls[1].mode).toBe("fitd");
+    expect(rolls[1].fitdCut).toBe(1);
     expect(parseSharedRolls("not an array")).toEqual([]);
   });
 });
@@ -597,10 +601,20 @@ describe("rollFitdPool", () => {
     expect(getFitdOutcome("d6", results)?.name).toBe("Bad outcome");
   });
 
+  it("cuts the highest pool dice before selecting the result", () => {
+    const samples = [0.99, 0.66, 0.33, 0];
+    let index = 0;
+    expect(rollFitdPool("d6", 4, () => samples[index++], 2)).toEqual([
+      { dieId: "d6", value: "1", unselectedValues: ["4", "6"] },
+      { dieId: "d6", value: "2" },
+    ]);
+  });
+
   it("rejects Plot, invalid counts, and counts above the cap", () => {
     expect(() => rollFitdPool("plot", 1)).toThrow(RangeError);
     expect(() => rollFitdPool("d6", -1)).toThrow(RangeError);
     expect(() => rollFitdPool("d6", 21)).toThrow(RangeError);
+    expect(() => rollFitdPool("d6", 2, Math.random, 2)).toThrow(RangeError);
   });
 });
 

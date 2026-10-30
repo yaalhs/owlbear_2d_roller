@@ -11,6 +11,7 @@ import {
 import { appendRollSummary } from "./roll-summary";
 import {
   getAllRollResults,
+  getFitdOutcome,
   formatRollSubtitle,
   getRollOutcomeCounts,
   getVisibleDieCount,
@@ -95,6 +96,10 @@ if (!roll) {
   const faces = document.createElement("div");
   faces.className = "toast-faces";
   const markedTargets = new Set<AdvantageTarget>();
+  const fitdHighestValue =
+    roll.mode === "fitd"
+      ? getFitdOutcome(roll.results[0]?.dieId ?? "", roll.results)?.highestValue
+      : undefined;
   for (const result of roll.results) {
     const target: AdvantageTarget | undefined =
       result.dieId === "d20" || result.dieId === "plot"
@@ -106,7 +111,14 @@ if (!roll) {
     const dieMode =
       mode ??
       (!target ? roll.advantage?.dice?.[result.dieId]?.mode : undefined);
-    faces.append(createToastFaceTile(result.dieId, result.value, dieMode));
+    faces.append(
+      createToastFaceTile(
+        result.dieId,
+        result.value,
+        dieMode,
+        fitdHighestValue !== undefined && result.value !== fitdHighestValue,
+      ),
+    );
     if (result.unselectedValue !== undefined) {
       faces.append(
         createToastFaceTile(

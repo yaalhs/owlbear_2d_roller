@@ -180,6 +180,56 @@ h2 {
   text-align: center;
 }
 
+.fitd-cut-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-top: 5px;
+}
+
+.fitd-cut-label {
+  margin-right: 3px;
+  color: #c9c2da;
+  font-size: 11px;
+}
+
+.fitd-cut-button {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border: 1px solid #464550;
+  border-radius: 6px;
+  background: #1d1e25;
+  color: #e6e0f3;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fitd-cut-button:hover:not(:disabled) {
+  border-color: #a18aff;
+  background: #302c40;
+}
+
+.fitd-cut-button:focus-visible {
+  outline: 2px solid #b5a4ff;
+  outline-offset: 1px;
+}
+
+.fitd-cut-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fitd-cut-count {
+  min-width: 16px;
+  color: #eee9ff;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
 .die-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

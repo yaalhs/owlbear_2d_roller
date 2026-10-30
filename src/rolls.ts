@@ -21,6 +21,7 @@ export interface SharedRoll {
   readonly results: readonly RolledDie[];
   readonly modifierDice?: readonly RolledDie[];
   readonly modifier?: number;
+  readonly fitdCut?: number;
   readonly mode?: RollMode;
   readonly advantage?: AdvantageSettings;
 }
@@ -288,6 +289,7 @@ export function rollFitdPool(
   dieId: string,
   quantity: number,
   random: () => number = Math.random,
+  cut = 0,
 ): RolledDie[] {
   const die = findDie(dieId);
   if (!die || die.id === "plot") {
@@ -303,21 +305,39 @@ export function rollFitdPool(
       `Forged in the Dark dice count cannot exceed ${MAX_DICE_PER_TYPE} for one die type.`,
     );
   }
-  if (quantity > 0) {
-    return rollDice([die], { [dieId]: quantity }, random);
+  if (!Number.isInteger(cut) || cut < 0 || cut > Math.max(0, quantity - 1)) {
+    throw new RangeError(
+      "Cut must be a whole number that leaves at least one die in the pool.",
+    );
   }
 
-  const candidates = rollDice([die], { [dieId]: 2 }, random);
+  const rolledQuantity = quantity > 0 ? quantity : 2;
+  const candidates = rollDice([die], { [dieId]: rolledQuantity }, random);
   const faceRank = (value: string) =>
     die.faces.findIndex((face) => face.value === value);
-  candidates.sort((left, right) => faceRank(left.value) - faceRank(right.value));
-  const [kept, discarded] = candidates;
-  if (!kept || !discarded) {
-    throw new Error("A zero-dice roll must generate two results.");
+  const orderedCandidates = [...candidates].sort(
+    (left, right) => faceRank(left.value) - faceRank(right.value),
+  );
+  const keptCandidates =
+    quantity === 0
+      ? orderedCandidates.slice(0, 1)
+      : orderedCandidates.slice(0, quantity - cut);
+  const discardedCandidates =
+    quantity === 0
+      ? orderedCandidates.slice(1)
+      : orderedCandidates.slice(quantity - cut);
+  const kept = keptCandidates.map((result) => ({ ...result }));
+  const firstKept = kept[0];
+  if (!firstKept) {
+    throw new Error("A Forged in the Dark roll must keep at least one die.");
   }
-  return [
-    { dieId, value: kept.value, unselectedValue: discarded.value },
-  ];
+  const discardedValues = discardedCandidates.map((result) => result.value);
+  if (quantity === 0 && discardedValues.length === 1) {
+    firstKept.unselectedValue = discardedValues[0];
+  } else if (discardedValues.length > 0) {
+    firstKept.unselectedValues = discardedValues;
+  }
+  return kept;
 }
 
 export function rollDice(
@@ -477,6 +497,8 @@ export function parseSharedRolls(value: unknown): SharedRoll[] {
       (candidate.modifierDice !== undefined &&
         !Array.isArray(candidate.modifierDice)) ||
       (candidate.modifier !== undefined && !Number.isInteger(candidate.modifier)) ||
+      (candidate.fitdCut !== undefined &&
+        (!Number.isInteger(candidate.fitdCut) || (candidate.fitdCut as number) < 0)) ||
       (candidate.mode !== undefined &&
         candidate.mode !== "plotweaver" &&
         candidate.mode !== "fitd" &&
@@ -534,10 +556,14 @@ export function parseSharedRolls(value: unknown): SharedRoll[] {
         }) &&
         candidate.modifierDice === undefined &&
         candidate.modifier === undefined &&
-        candidate.advantage === undefined
+        candidate.advantage === undefined &&
+        (candidate.fitdCut === undefined ||
+          ((candidate.fitdCut as number) < candidate.results.length &&
+            candidate.fitdCut ===
+              (candidate.results[0] as RolledDie).unselectedValues?.length))
       );
     }
-    return true;
+    return candidate.fitdCut === undefined;
   });
 }
 

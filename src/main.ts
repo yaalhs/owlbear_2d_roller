@@ -9,6 +9,7 @@ import {
 import type { DieDefinition, DieFace } from "./catalog";
 import {
   getAllRollResults,
+  getFitdOutcome,
   getRollOutcomeCounts,
   getVisibleDieCount,
   parseSharedRolls,
@@ -56,6 +57,9 @@ const fitdDieOptions = requiredElement<HTMLDivElement>("fitd-die-options");
 const fitdCountOutput = requiredElement<HTMLOutputElement>("fitd-count");
 const fitdMinus = requiredElement<HTMLButtonElement>("fitd-minus");
 const fitdPlus = requiredElement<HTMLButtonElement>("fitd-plus");
+const fitdCutMinus = requiredElement<HTMLButtonElement>("fitd-cut-minus");
+const fitdCutCountOutput = requiredElement<HTMLOutputElement>("fitd-cut-count");
+const fitdCutPlus = requiredElement<HTMLButtonElement>("fitd-cut-plus");
 const modifierSection = requiredElement<HTMLDivElement>("modifier-section");
 const saveRollButton = requiredElement<HTMLButtonElement>("save-roll-button");
 const quantitySelections = new Map<string, number>();
@@ -70,6 +74,7 @@ let modifierEnabled = false;
 let rollMode: "plotweaver" | "fitd" = "plotweaver";
 let fitdDieId = "d6";
 let fitdQuantity = 1;
+let fitdCut = 0;
 let keepSelection = false;
 
 function requiredElement<T extends HTMLElement>(id: string): T {
@@ -279,6 +284,10 @@ function updateFitdControls(): void {
   fitdCountOutput.textContent = String(fitdQuantity);
   fitdMinus.disabled = fitdQuantity <= 0;
   fitdPlus.disabled = fitdQuantity >= MAX_DICE_PER_ROLL;
+  fitdCut = Math.min(fitdCut, Math.max(0, fitdQuantity - 1));
+  fitdCutCountOutput.textContent = String(fitdCut);
+  fitdCutMinus.disabled = fitdCut === 0;
+  fitdCutPlus.disabled = fitdCut >= Math.max(0, fitdQuantity - 1);
   for (const button of fitdDieOptions.querySelectorAll<HTMLButtonElement>(
     "[data-fitd-die-id]",
   )) {
@@ -520,6 +529,10 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
     const resultGrid = document.createElement("div");
     resultGrid.className = "result-grid";
     const markedTargets = new Set<AdvantageTarget>();
+    const fitdHighestValue =
+      roll.mode === "fitd"
+        ? getFitdOutcome(roll.results[0]?.dieId ?? "", roll.results)?.highestValue
+        : undefined;
     for (const result of roll.results) {
       const die = findDie(result.dieId);
       const face = die?.faces.find((candidate) => candidate.value === result.value);
@@ -530,7 +543,16 @@ function renderHistory(rolls: readonly SharedRoll[]): void {
       const dieMode =
         mode ??
         (!target ? roll.advantage?.dice?.[result.dieId]?.mode : undefined);
-      resultGrid.append(createFaceTile(die, face, result.value, dieMode));
+      resultGrid.append(
+        createFaceTile(
+          die,
+          face,
+          result.value,
+          dieMode,
+          fitdHighestValue !== undefined &&
+            result.value !== fitdHighestValue,
+        ),
+      );
       if (result.unselectedValue !== undefined) {
         const unselectedFace = die?.faces.find(
           (candidate) => candidate.value === result.unselectedValue,
@@ -736,7 +758,8 @@ function createFitdRoll(): SharedRoll {
   return {
     id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
-    results: rollFitdPool(fitdDieId, fitdQuantity),
+    results: rollFitdPool(fitdDieId, fitdQuantity, Math.random, fitdCut),
+    ...(fitdCut > 0 ? { fitdCut } : {}),
     mode: "fitd",
   };
 }
@@ -794,6 +817,14 @@ fitdPlus.addEventListener("click", () => {
   fitdQuantity = Math.min(MAX_DICE_PER_ROLL, fitdQuantity + 1);
   updateFitdControls();
   updateRollButton();
+});
+fitdCutMinus.addEventListener("click", () => {
+  fitdCut = Math.max(0, fitdCut - 1);
+  updateFitdControls();
+});
+fitdCutPlus.addEventListener("click", () => {
+  fitdCut = Math.min(Math.max(0, fitdQuantity - 1), fitdCut + 1);
+  updateFitdControls();
 });
 
 function setRollMode(mode: "plotweaver" | "fitd"): void {
