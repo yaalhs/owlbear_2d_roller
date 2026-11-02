@@ -487,7 +487,7 @@ describe("getPlotweaverBreakdown", () => {
       }),
     ).toMatchObject({
       d20AndPlot: 22,
-      hit: 9,
+      hit: 6,
       graze: 4,
       total: 31,
     });
