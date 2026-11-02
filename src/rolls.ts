@@ -242,7 +242,7 @@ export function formatPlotweaverBreakdown(
   const breakdown = getPlotweaverBreakdown(roll);
   if (!breakdown.hasD20) return undefined;
 
-  const components = [`d20 + Plot + modifier ${breakdown.d20AndPlot}`];
+  const components = [`Plotweaver ${breakdown.d20AndPlot}`];
   if (breakdown.hasOtherDice) {
     components.push(`Hit ${breakdown.hit}`, `Graze ${breakdown.graze}`);
   }

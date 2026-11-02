@@ -474,7 +474,7 @@ describe("getPlotweaverBreakdown", () => {
     });
   });
 
-  it("applies modifier dice to d20 + Plot and Hit, but not Graze", () => {
+  it("applies modifier dice only to d20 + Plot, not Hit or Graze", () => {
     expect(
       getPlotweaverBreakdown({
         results: [
@@ -513,9 +513,9 @@ describe("getPlotweaverBreakdown", () => {
     });
   });
 
-  it("formats Plotweaver components without a separate total", () => {
+  it("formats Plotweaver components without the formula label or separate total", () => {
     expect(formatPlotweaverBreakdown(roll)).toBe(
-      "d20 + Plot + modifier 18 · Hit 8 · Graze 7",
+      "Plotweaver 18 · Hit 8 · Graze 7",
     );
     expect(
       formatPlotweaverBreakdown({
@@ -525,7 +525,7 @@ describe("getPlotweaverBreakdown", () => {
         ],
         modifier: 3,
       }),
-    ).toBe("d20 + Plot + modifier 20");
+    ).toBe("Plotweaver 20");
   });
 });
 

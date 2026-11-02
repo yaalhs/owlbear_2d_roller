@@ -152,7 +152,7 @@ if (!roll) {
 
   const total = document.createElement("span");
   total.className = "toast-total";
-  appendRollSummary(total, roll);
+  appendRollSummary(total, roll, { showPlotweaverLabel: true });
   root.append(heading, subtitle, faces);
   if (roll.mode !== "fitd") {
     const outcomes = getRollOutcomeCounts(allResults);
