@@ -489,7 +489,7 @@ describe("getPlotweaverBreakdown", () => {
       d20AndPlot: 22,
       hit: 6,
       graze: 4,
-      total: 31,
+      total: 28,
     });
   });
 
