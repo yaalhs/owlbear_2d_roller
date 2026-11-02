@@ -35,6 +35,7 @@ export function appendRollSummary(
     if (options.showPlotweaverLabel) {
       target.append(document.createTextNode("Plotweaver · "));
     }
+    target.append(document.createTextNode(""));
     appendCalculatedValue(target, breakdown.d20AndPlot);
     if (breakdown.hasOtherDice) {
       target.append(document.createTextNode(" · Hit "));

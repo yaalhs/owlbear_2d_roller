@@ -214,11 +214,12 @@ export function getPlotweaverBreakdown(
   const otherResults = roll.results.filter(
     (result) => result.dieId !== "d20" && result.dieId !== "plot",
   );
-  const modifier = (roll.modifier ?? 0) + getModifierDiceValue(roll.modifierDice);
+  const modifier = (roll.modifier ?? 0);
+  const diemodifier = getModifierDiceValue(roll.modifierDice);
   const d20AndPlot =
     sumNumericResults(d20Results) +
     getPlotDieBonus(roll.results) +
-    modifier;
+    modifier + diemodifier;
   const otherDice = sumNumericResults(otherResults);
   const hit = otherDice + modifier;
   const hasD20 = d20Results.length > 0;
