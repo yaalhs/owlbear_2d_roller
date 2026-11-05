@@ -36,7 +36,7 @@ Owlbear does not run the source code directly from your computer or a GitHub rep
 
 1. Place the project in a **public GitHub repository**, including the `.github/workflows/deploy.yml` workflow.
 2. In the repository, open **Settings → Pages** and set the build and deployment source to **GitHub Actions**.
-3. Once the workflow has been triggered, open the **Actions** tab and wait for **Deploy extension to GitHub Pages** to finish successfully. It installs dependencies, runs tests, builds the extension, writes absolute Pages URLs for the manifest icon, popover, and background page, and publishes the contents of `dist/`.
+3. Once the workflow has been triggered, open the **Actions** tab and wait for **Deploy extension to GitHub Pages** to finish successfully. It installs dependencies, runs tests, builds the extension, writes absolute Pages URLs for the manifest icon, `action-icon.svg`, popover, and background page, verifies the built action icon and URL, and publishes the contents of `dist/`. Vite copies `public/action-icon.svg` to the root of `dist/`, where the deployed manifest references it at `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/action-icon.svg`.
 4. The extension manifest URL is `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/manifest.json`, with your GitHub username and repository name in place of the placeholders.
 5. In Owlbear Rodeo, use the extension menu's option to add/load an extension by URL and paste that manifest URL. Each player who should receive roll pop-ups must load the same extension URL in that room; they do not need to open the dice popover.
 
