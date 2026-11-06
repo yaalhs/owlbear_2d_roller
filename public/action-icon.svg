@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:graphite="https://graphite.art" width="24px" height="24px" viewBox="0 0 24 24"><defs></defs><g transform="translate(2.9 1.5) scale(0.095)"><g transform="matrix(1,0,0,1,-510.805303475,-417.277688971)">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:graphite="https://graphite.art" width="24px" height="24px" viewBox="0 0 24 24"><defs><style>path[stroke="#ffffff"]{stroke:#1f2937}path[fill="#ffffff"]{fill:#1f2937}</style></defs><g transform="translate(2.9 1.5) scale(0.095)"><g transform="matrix(1,0,0,1,-510.805303475,-417.277688971)">
 <g/>
 <g>
 	<path d="M611.3372214530921,423.0511916624073 L706.8691394316195,478.20657022351133 L706.8691394316195,588.5173273457194 L611.3372214530921,643.6727059068235 L515.8053034745647,588.5173273457194 L515.8053034745647,478.2065702235114 L611.3372214530921,423.0511916624073 Z" fill="none" stroke-width="10" stroke="#ffffff"/>
