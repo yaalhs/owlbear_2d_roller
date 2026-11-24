@@ -1,0 +1,297 @@
+:root {
+  color-scheme: dark;
+  --palette-background: #181a20;
+  --palette-panel: #202128;
+  --palette-surface: #292a33;
+  --palette-inset: #1d1e25;
+  --palette-border: #34323d;
+  --palette-text: #f5f3fb;
+  --palette-muted: #c9c2da;
+  --palette-soft: #aaa4b7;
+  --palette-primary: #8068e9;
+  --palette-primary-hover: #937ff3;
+  --palette-primary-soft: #3a3159;
+  --palette-primary-text: #ffffff;
+  color: var(--palette-text);
+  background: var(--palette-background);
+}
+
+:root[data-palette="duskvol"] {
+  --palette-background: #11171d;
+  --palette-panel: #1b242c;
+  --palette-surface: #252f37;
+  --palette-inset: #151e25;
+  --palette-border: #394850;
+  --palette-text: #d3dde2;
+  --palette-muted: #aab9c1;
+  --palette-soft: #82939c;
+  --palette-primary: #68c8e8;
+  --palette-primary-hover: #92def3;
+  --palette-primary-soft: #244652;
+  --palette-primary-text: #10232b;
+}
+
+:root[data-palette="mistborn"] {
+  --palette-background: #252228;
+  --palette-panel: #312d35;
+  --palette-surface: #3c3741;
+  --palette-inset: #2b2730;
+  --palette-border: #554a59;
+  --palette-text: #d8d0d0;
+  --palette-muted: #b6a9ad;
+  --palette-soft: #90838a;
+  --palette-primary: #8f2638;
+  --palette-primary-hover: #b43a4f;
+  --palette-primary-soft: #48232d;
+  --palette-primary-text: #ffffff;
+}
+
+:root[data-palette="stormlight"] {
+  --palette-background: #142846;
+  --palette-panel: #1e3657;
+  --palette-surface: #294364;
+  --palette-inset: #192f4d;
+  --palette-border: #3c5876;
+  --palette-text: #f4ebd5;
+  --palette-muted: #d4d0c4;
+  --palette-soft: #aab8c5;
+  --palette-primary: #d5a83b;
+  --palette-primary-hover: #e8c568;
+  --palette-primary-soft: #534a35;
+  --palette-primary-text: #172536;
+}
+
+.roller,
+.results {
+  border-color: var(--palette-border);
+  background: var(--palette-panel);
+}
+
+.die-row,
+.roll-entry,
+.modifier-toggle,
+.save-roll-button,
+.die-add-button,
+.modifier-die-button {
+  border-color: var(--palette-border);
+  background: var(--palette-surface);
+  color: var(--palette-text);
+}
+
+.quantity-button,
+.die-roll-option,
+.fitd-cut-button,
+.roll-mode-controls {
+  border-color: var(--palette-border);
+  background: var(--palette-inset);
+  color: var(--palette-muted);
+}
+
+.quantity-button:hover:not(:disabled),
+.die-roll-option:hover:not(:disabled),
+.fitd-cut-button:hover:not(:disabled),
+.die-add-button:hover:not(:disabled),
+.die-add-button:focus-visible,
+.modifier-die-button:hover:not(:disabled),
+.modifier-die-button:focus-visible,
+.save-roll-button:hover {
+  border-color: var(--palette-primary-hover);
+  background: var(--palette-primary-soft);
+}
+
+.mode-button[aria-pressed="true"],
+.die-roll-option[aria-pressed="true"],
+.fitd-die-button[aria-pressed="true"],
+.save-roll-button[aria-pressed="true"] {
+  border-color: var(--palette-primary);
+  background: var(--palette-primary-soft);
+  color: var(--palette-text);
+}
+
+.fitd-die-button {
+  border-color: var(--palette-border);
+  background: var(--palette-inset);
+}
+
+.roll-button {
+  background: var(--palette-primary);
+  color: var(--palette-primary-text);
+}
+
+.roll-button:hover:not(:disabled) {
+  background: var(--palette-primary-hover);
+}
+
+.fitd-quantity-button {
+  border-color: var(--palette-primary);
+  background: var(--palette-primary-soft);
+  color: var(--palette-text);
+}
+
+.fitd-quantity-button:hover:not(:disabled) {
+  border-color: var(--palette-primary-hover);
+  background: var(--palette-primary-soft);
+}
+
+.fitd-count,
+.fitd-cut-count,
+.die-name,
+.roll-entry-header strong,
+.calculated-result,
+.roll-outcome-count .plot-dingbat {
+  color: var(--palette-text);
+}
+
+.eyebrow,
+.status,
+.fitd-label,
+.fitd-cut-label,
+.roll-mode-label,
+.mode-button,
+.die-description,
+.dice-advantage-label,
+.modifier-dice-label,
+.modifier-die-remove,
+.save-roll-button,
+.results-count,
+.empty-state,
+.roll-entry-header time,
+.roll-total,
+.roll-outcome-summary,
+footer,
+.toast-subtitle,
+.toast-total {
+  color: var(--palette-muted);
+}
+
+.status::before {
+  background: var(--palette-primary);
+}
+
+.die-remove-button {
+  color: var(--palette-muted);
+}
+
+.die-roll-option[aria-pressed="true"] {
+  background: var(--palette-primary-soft);
+}
+
+.die-selection-count,
+.die-mode-marker,
+.modifier-die-marker {
+  border-color: var(--palette-primary);
+  background: var(--palette-primary-soft);
+  color: var(--palette-text);
+}
+
+.die-shape-art {
+  filter:
+    drop-shadow(0 0 1px var(--palette-primary))
+    drop-shadow(0 2px 2px #0007);
+}
+
+.modifier-toggle:hover,
+.save-roll-button:hover {
+  color: var(--palette-text);
+}
+
+.save-roll-button[aria-pressed="true"] {
+  border-color: var(--palette-primary);
+}
+
+.toast {
+  border-color: var(--palette-primary);
+  background: var(--palette-panel);
+}
+
+.toast:hover {
+  border-color: var(--palette-primary-hover);
+  background: var(--palette-surface);
+}
+
+.toast-heading {
+  color: var(--palette-text);
+}
+
+.toast-total .calculated-result {
+  color: var(--palette-text);
+}
+
+.quantity-button:focus-visible,
+.modifier-toggle:focus-visible,
+.fitd-quantity-button:focus-visible,
+.fitd-cut-button:focus-visible,
+.die-roll-option:focus-visible,
+.mode-button:focus-visible,
+.save-roll-button:focus-visible {
+  outline-color: var(--palette-primary-hover);
+}
+
+.palette-picker {
+  display: grid;
+  gap: 6px;
+  margin-top: 11px;
+  padding-top: 9px;
+  border-top: 1px solid var(--palette-border);
+}
+
+.palette-picker-label {
+  color: var(--palette-muted);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.palette-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.palette-button {
+  display: inline-flex;
+  min-height: 27px;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 7px;
+  border: 1px solid var(--palette-border);
+  border-radius: 6px;
+  background: var(--palette-inset);
+  color: var(--palette-muted);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.palette-button::before {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--palette-swatch);
+  content: "";
+}
+
+.palette-button[data-palette="default"] {
+  --palette-swatch: #8068e9;
+}
+
+.palette-button[data-palette="duskvol"] {
+  --palette-swatch: #68c8e8;
+}
+
+.palette-button[data-palette="mistborn"] {
+  --palette-swatch: #8f2638;
+}
+
+.palette-button[data-palette="stormlight"] {
+  --palette-swatch: #d5a83b;
+}
+
+.palette-button[aria-pressed="true"] {
+  border-color: var(--palette-primary);
+  background: var(--palette-primary-soft);
+  color: var(--palette-text);
+}
+
+.palette-button:focus-visible {
+  outline: 2px solid var(--palette-primary-hover);
+  outline-offset: 1px;
+}

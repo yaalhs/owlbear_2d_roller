@@ -31,9 +31,16 @@ import {
   createRollOutcomeSummary,
 } from "./die-result";
 import { appendRollSummary } from "./roll-summary";
+import {
+  applyPalette,
+  isPaletteName,
+  readSavedPalette,
+  savePalette,
+} from "./palette";
 import "./font.css";
 import "./die-graphic.css";
 import "./style.css";
+import "./palette.css";
 
 const METADATA_KEY = "com.dieroller.shared-dice-roller/rolls";
 const HISTORY_LIMIT = 12;
@@ -62,6 +69,9 @@ const fitdCutCountOutput = requiredElement<HTMLOutputElement>("fitd-cut-count");
 const fitdCutPlus = requiredElement<HTMLButtonElement>("fitd-cut-plus");
 const modifierSection = requiredElement<HTMLDivElement>("modifier-section");
 const saveRollButton = requiredElement<HTMLButtonElement>("save-roll-button");
+const paletteButtons = document.querySelectorAll<HTMLButtonElement>(
+  ".palette-button",
+);
 const quantitySelections = new Map<string, number>();
 const modifierDiceSelections = new Map<string, number>();
 let advantageSelections: AdvantageSettings = {};
@@ -76,6 +86,25 @@ let fitdDieId = "d6";
 let fitdQuantity = 1;
 let fitdCut = 0;
 let keepSelection = false;
+
+function setPalette(palette: string): void {
+  if (!isPaletteName(palette)) {
+    throw new RangeError(`Unknown color palette: ${palette}`);
+  }
+  applyPalette(palette);
+  savePalette(palette);
+  for (const button of paletteButtons) {
+    button.setAttribute("aria-pressed", String(button.dataset.palette === palette));
+  }
+  const themeColor = document.querySelector<HTMLMetaElement>(
+    'meta[name="theme-color"]',
+  );
+  if (themeColor) {
+    themeColor.content = getComputedStyle(document.documentElement)
+      .getPropertyValue("--palette-background")
+      .trim();
+  }
+}
 
 function requiredElement<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);
@@ -791,6 +820,13 @@ async function saveAndShareRoll(roll: SharedRoll): Promise<void> {
 buildDiceControls();
 buildFitdControls();
 renderHistory([]);
+setPalette(readSavedPalette());
+for (const button of paletteButtons) {
+  button.addEventListener("click", () => {
+    const palette = button.dataset.palette;
+    if (palette) setPalette(palette);
+  });
+}
 rollButton.addEventListener("click", () => void rollSelectedDice());
 modifierToggle.addEventListener("click", () => {
   modifierEnabled = !modifierEnabled;

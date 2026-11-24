@@ -9,6 +9,7 @@ import {
   createRollOutcomeSummary,
 } from "./die-result";
 import { appendRollSummary } from "./roll-summary";
+import { applyPalette, readSavedPalette } from "./palette";
 import {
   getAllRollResults,
   getFitdOutcome,
@@ -21,11 +22,13 @@ import type { AdvantageMode, AdvantageTarget } from "./rolls";
 import "./font.css";
 import "./die-graphic.css";
 import "./toast.css";
+import "./palette.css";
 
 const root = document.getElementById("roll-toast");
 if (!(root instanceof HTMLElement)) {
   throw new Error('Required page element "#roll-toast" was not found.');
 }
+applyPalette(readSavedPalette());
 
 const rollParam = new URLSearchParams(window.location.search).get("roll");
 let roll: ReturnType<typeof parseSharedRolls>[number] | undefined;
