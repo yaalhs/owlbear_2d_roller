@@ -1,4 +1,4 @@
-:root {
+:root[data-palette] {
   color-scheme: dark;
   --palette-background: #181a20;
   --palette-panel: #202128;
@@ -12,6 +12,7 @@
   --palette-primary-hover: #937ff3;
   --palette-primary-soft: #3a3159;
   --palette-primary-text: #ffffff;
+  --palette-error: #ff9b9b;
   color: var(--palette-text);
   background: var(--palette-background);
 }
@@ -29,6 +30,7 @@
   --palette-primary-hover: #92def3;
   --palette-primary-soft: #244652;
   --palette-primary-text: #10232b;
+  --palette-error: #ffaaa1;
 }
 
 :root[data-palette="mistborn"] {
@@ -44,6 +46,7 @@
   --palette-primary-hover: #b43a4f;
   --palette-primary-soft: #48232d;
   --palette-primary-text: #ffffff;
+  --palette-error: #ef8291;
 }
 
 :root[data-palette="stormlight"] {
@@ -59,175 +62,212 @@
   --palette-primary-hover: #e8c568;
   --palette-primary-soft: #534a35;
   --palette-primary-text: #172536;
+  --palette-error: #ffad9a;
 }
 
-.roller,
-.results {
+:root[data-palette] body {
+  color: var(--palette-text);
+  background: var(--palette-background);
+}
+
+:root[data-palette] .roller,
+:root[data-palette] .results {
   border-color: var(--palette-border);
   background: var(--palette-panel);
 }
 
-.die-row,
-.roll-entry,
-.modifier-toggle,
-.save-roll-button,
-.die-add-button,
-.modifier-die-button {
+:root[data-palette] .die-row,
+:root[data-palette] .roll-entry,
+:root[data-palette] .modifier-toggle,
+:root[data-palette] .save-roll-button,
+:root[data-palette] .die-add-button,
+:root[data-palette] .modifier-die-button {
   border-color: var(--palette-border);
   background: var(--palette-surface);
   color: var(--palette-text);
 }
 
-.quantity-button,
-.die-roll-option,
-.fitd-cut-button,
-.roll-mode-controls {
+:root[data-palette] .quantity-button,
+:root[data-palette] .die-roll-option,
+:root[data-palette] .fitd-cut-button,
+:root[data-palette] .roll-mode-controls {
   border-color: var(--palette-border);
   background: var(--palette-inset);
   color: var(--palette-muted);
 }
 
-.quantity-button:hover:not(:disabled),
-.die-roll-option:hover:not(:disabled),
-.fitd-cut-button:hover:not(:disabled),
-.die-add-button:hover:not(:disabled),
-.die-add-button:focus-visible,
-.modifier-die-button:hover:not(:disabled),
-.modifier-die-button:focus-visible,
-.save-roll-button:hover {
+:root[data-palette] .die-remove-button,
+:root[data-palette] .modifier-die-remove {
+  border-color: var(--palette-border);
+  background: var(--palette-inset);
+  color: var(--palette-muted);
+}
+
+:root[data-palette] .quantity-button:disabled,
+:root[data-palette] .die-remove-button:disabled,
+:root[data-palette] .modifier-die-remove:disabled {
+  color: var(--palette-soft);
+}
+
+:root[data-palette] .quantity-button:hover:not(:disabled),
+:root[data-palette] .die-roll-option:hover:not(:disabled),
+:root[data-palette] .fitd-cut-button:hover:not(:disabled),
+:root[data-palette] .die-add-button:hover:not(:disabled),
+:root[data-palette] .die-add-button:focus-visible,
+:root[data-palette] .modifier-die-button:hover:not(:disabled),
+:root[data-palette] .modifier-die-button:focus-visible,
+:root[data-palette] .save-roll-button:hover {
   border-color: var(--palette-primary-hover);
   background: var(--palette-primary-soft);
 }
 
-.mode-button[aria-pressed="true"],
-.die-roll-option[aria-pressed="true"],
-.fitd-die-button[aria-pressed="true"],
-.save-roll-button[aria-pressed="true"] {
+:root[data-palette] .mode-button[aria-pressed="true"],
+:root[data-palette] .die-roll-option[aria-pressed="true"],
+:root[data-palette] .fitd-die-button[aria-pressed="true"],
+:root[data-palette] .save-roll-button[aria-pressed="true"] {
   border-color: var(--palette-primary);
   background: var(--palette-primary-soft);
   color: var(--palette-text);
 }
 
-.fitd-die-button {
+:root[data-palette] .fitd-die-button {
   border-color: var(--palette-border);
   background: var(--palette-inset);
 }
 
-.roll-button {
+:root[data-palette] .roll-button {
   background: var(--palette-primary);
   color: var(--palette-primary-text);
 }
 
-.roll-button:hover:not(:disabled) {
+:root[data-palette] .roll-button:hover:not(:disabled) {
   background: var(--palette-primary-hover);
 }
 
-.fitd-quantity-button {
+:root[data-palette] .roll-button:disabled {
+  background: var(--palette-inset);
+  color: var(--palette-soft);
+}
+
+:root[data-palette] .fitd-quantity-button {
   border-color: var(--palette-primary);
   background: var(--palette-primary-soft);
   color: var(--palette-text);
 }
 
-.fitd-quantity-button:hover:not(:disabled) {
+:root[data-palette] .fitd-quantity-button:hover:not(:disabled) {
   border-color: var(--palette-primary-hover);
   background: var(--palette-primary-soft);
 }
 
-.fitd-count,
-.fitd-cut-count,
-.die-name,
-.roll-entry-header strong,
-.calculated-result,
-.roll-outcome-count .plot-dingbat {
+:root[data-palette] .fitd-count,
+:root[data-palette] .fitd-cut-count,
+:root[data-palette] .quantity-value,
+:root[data-palette] .dice-advantage-count,
+:root[data-palette] .die-name,
+:root[data-palette] .roll-entry-header strong,
+:root[data-palette] .calculated-result,
+:root[data-palette] .roll-outcome-count .plot-dingbat {
   color: var(--palette-text);
 }
 
-.eyebrow,
-.status,
-.fitd-label,
-.fitd-cut-label,
-.roll-mode-label,
-.mode-button,
-.die-description,
-.dice-advantage-label,
-.modifier-dice-label,
-.modifier-die-remove,
-.save-roll-button,
-.results-count,
-.empty-state,
-.roll-entry-header time,
-.roll-total,
-.roll-outcome-summary,
-footer,
-.toast-subtitle,
-.toast-total {
+:root[data-palette] .eyebrow,
+:root[data-palette] .status,
+:root[data-palette] .fitd-label,
+:root[data-palette] .fitd-help,
+:root[data-palette] .fitd-cut-label,
+:root[data-palette] .roll-mode-label,
+:root[data-palette] .mode-button,
+:root[data-palette] .die-description,
+:root[data-palette] .dice-advantage-label,
+:root[data-palette] .modifier-dice-label,
+:root[data-palette] .modifier-die-remove,
+:root[data-palette] .save-roll-button,
+:root[data-palette] .results-count,
+:root[data-palette] .empty-state,
+:root[data-palette] .roll-entry-header time,
+:root[data-palette] .roll-total,
+:root[data-palette] .roll-outcome-summary,
+:root[data-palette] footer,
+:root[data-palette] .toast-subtitle,
+:root[data-palette] .toast-total {
   color: var(--palette-muted);
 }
 
-.status::before {
+:root[data-palette] .status::before {
   background: var(--palette-primary);
 }
 
-.die-remove-button {
-  color: var(--palette-muted);
-}
-
-.die-roll-option[aria-pressed="true"] {
+:root[data-palette] .die-roll-option[aria-pressed="true"] {
   background: var(--palette-primary-soft);
 }
 
-.die-selection-count,
-.die-mode-marker,
-.modifier-die-marker {
+:root[data-palette] .die-selection-count,
+:root[data-palette] .die-mode-marker,
+:root[data-palette] .modifier-die-marker {
   border-color: var(--palette-primary);
   background: var(--palette-primary-soft);
   color: var(--palette-text);
 }
 
-.die-shape-art {
+:root[data-palette] .die-shape-art {
   filter:
     drop-shadow(0 0 1px var(--palette-primary))
     drop-shadow(0 2px 2px #0007);
 }
 
-.modifier-toggle:hover,
-.save-roll-button:hover {
+:root[data-palette] .modifier-toggle:hover,
+:root[data-palette] .save-roll-button:hover {
   color: var(--palette-text);
 }
 
-.save-roll-button[aria-pressed="true"] {
+:root[data-palette] .save-roll-button[aria-pressed="true"] {
   border-color: var(--palette-primary);
 }
 
-.toast {
+:root[data-palette] .toast {
   border-color: var(--palette-primary);
   background: var(--palette-panel);
 }
 
-.toast:hover {
+:root[data-palette] .toast:hover {
   border-color: var(--palette-primary-hover);
   background: var(--palette-surface);
 }
 
-.toast-heading {
+:root[data-palette] .toast-heading {
   color: var(--palette-text);
 }
 
-.toast-total .calculated-result {
+:root[data-palette] .toast-total .calculated-result {
   color: var(--palette-text);
 }
 
-.quantity-button:focus-visible,
-.modifier-toggle:focus-visible,
-.fitd-quantity-button:focus-visible,
-.fitd-cut-button:focus-visible,
-.die-roll-option:focus-visible,
-.mode-button:focus-visible,
-.save-roll-button:focus-visible {
+:root[data-palette] .quantity-button:focus-visible,
+:root[data-palette] .modifier-toggle:focus-visible,
+:root[data-palette] .fitd-quantity-button:focus-visible,
+:root[data-palette] .fitd-cut-button:focus-visible,
+:root[data-palette] .die-roll-option:focus-visible,
+:root[data-palette] .mode-button:focus-visible,
+:root[data-palette] .save-roll-button:focus-visible {
+  border-color: var(--palette-primary-hover);
+  outline-color: var(--palette-primary-hover);
+  box-shadow: 0 0 0 2px var(--palette-primary-soft);
+}
+
+:root[data-palette] .toast:focus-visible {
   outline-color: var(--palette-primary-hover);
 }
 
-.palette-picker {
+:root[data-palette] .error {
+  color: var(--palette-error);
+}
+
+:root[data-palette] .toast .roll-outcome-summary {
+  background: var(--palette-inset);
+}
+
+:root[data-palette] .palette-picker {
   display: grid;
   gap: 6px;
   margin-top: 11px;
@@ -235,19 +275,19 @@ footer,
   border-top: 1px solid var(--palette-border);
 }
 
-.palette-picker-label {
+:root[data-palette] .palette-picker-label {
   color: var(--palette-muted);
   font-size: 10px;
   font-weight: 650;
 }
 
-.palette-options {
+:root[data-palette] .palette-options {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
 }
 
-.palette-button {
+:root[data-palette] .palette-button {
   display: inline-flex;
   min-height: 27px;
   align-items: center;
@@ -285,13 +325,13 @@ footer,
   --palette-swatch: #d5a83b;
 }
 
-.palette-button[aria-pressed="true"] {
+:root[data-palette] .palette-button[aria-pressed="true"] {
   border-color: var(--palette-primary);
   background: var(--palette-primary-soft);
   color: var(--palette-text);
 }
 
-.palette-button:focus-visible {
+:root[data-palette] .palette-button:focus-visible {
   outline: 2px solid var(--palette-primary-hover);
   outline-offset: 1px;
 }
